@@ -34,6 +34,8 @@ Problems while compiling the code are possible due to different locations of lib
 
 ## Usage
 
+```gerbil [<option>|<flag>]* <input> <temp> <output>```
+
 Gerbil can be controlled by several command line options and flags.
 
 | Option                  | Description   | Default |
