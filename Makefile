@@ -1,5 +1,5 @@
 CC = g++
-NVCC = /usr/local/cuda/bin/nvcc
+NVCC = nvcc
 LDFLAGS =  -L/usr/local/lib/
 
 COMPUTE_CAPABILITY := \
@@ -41,7 +41,7 @@ OBJECTS = $(CPP_OBJECTS)
 
 ifeq ($(GPU),true)
 	CC = $(NVCC)
-	CFLAGS += -DGPU $(COMPUTE_CAPABILITY)
+	CFLAGS += -DGPU $(COMPUTE_CAPABILITY) -D_FORCE_INLINES
 	SRCS += $(CU_SRCS)
 	OBJECTS += $(CU_OBJECTS) 
 endif
