@@ -30,6 +30,7 @@ Gerbil is developed and tested at Linux operating systems. Migrating it to other
 
         make GPU=false
 
+Problems while compiling the code are possible due to different locations of libraries or the `nvcc` Compiler. In these cases, you have to modify the Makefile.
 
 ## Usage
 
