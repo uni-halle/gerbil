@@ -1,5 +1,4 @@
-# Gerbil
-## A fast and memory-efficient k-mer counter with GPU-support
+# Gerbil: A fast and memory-efficient k-mer counter with GPU-support
 
 A basic task in bioinformatics is the counting of k-mers in
 genome strings. The k-mer counting problem is to build a histogram of
