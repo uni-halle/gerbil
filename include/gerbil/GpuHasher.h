@@ -46,8 +46,10 @@ private:
 	// output queue
 	SyncSwapQueueMPSC<KmcBundle>* _kmcSyncSwapQueue;
 
+#ifdef GPU
 	// thread own hash tables
 	KmerCountingHashTable<K>** tables;
+#endif
 
 	uint32_t _thresholdMin;		// minimal number of occurrences to be output
 	uint8_t _numThreads;		// number of gpu hasher threads
@@ -81,8 +83,9 @@ public:
 					0), _btUKMersNumber(0) {
 
 		_threads = new std::thread*[_numThreads];
+		
+#ifdef GPU
 		tables = new KmerCountingHashTable<K>*[_numThreads];
-
 		// crate thread-own gpu hash tables
 		for (uint32_t i = 0; i < numThreads; i++) {
 			_threads[i] = nullptr;
@@ -91,14 +94,17 @@ public:
 			// report capacities to kmer distributor
 			distributor->updateCapacity(true, i, tables[i]->getMaxCapacity());
 		}
+#endif
 	}
 
 	~HasherTask() {
 
+#ifdef GPU
 		for (uint32_t i = 0; i < _numThreads; i++) {
 			delete tables[i];
 		}
 		delete[] tables;
+#endif
 		delete[] _threads;
 	}
 
