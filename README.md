@@ -5,7 +5,7 @@ genome strings. The k-mer counting problem is to build a histogram of
 all substrings of length k in a given genome sequence. 
 Gerbil is a k-mer counter that is specialized for high effiency when counting large k-mers for k.
 
-Developed by: Marius Erbert, Steffen Rechner (GPU-Part)
+Developed by: Marius Erbert, Steffen Rechner, Martin Luther University Halle-Wittenberg
 
 ## Install
 
