@@ -132,7 +132,7 @@ public:
 				kmb->count());
 
 		if (!success) {
-			printf("EMERGENCY!\n");
+			//printf("EMERGENCY!\n");
 			emergencyExtract();
 			// try to add again
 			success = this->insert((const KMer<K>*) kmb->getData(),
@@ -228,7 +228,7 @@ public:
 		cudaMemcpy(&numNoSuccess, this->numNoSuccessPtr, sizeof(uint32_t),
 				cudaMemcpyDeviceToHost);
 
-		printf("copy %u kmers back to host\n", numNoSuccess);
+		//printf("copy %u kmers back to host\n", numNoSuccess);
 
 		// if there are some
 		if (numNoSuccess > 0) {
@@ -267,7 +267,7 @@ public:
 							+ std::string(cudaGetErrorString(err)));
 		}
 
-		printf("done\n");
+		//printf("done\n");
 	}
 
 	/**
@@ -296,7 +296,7 @@ public:
 		// if there are some
 		if (numNoSuccess > 0) {
 
-			printf("numNoSuccess=%u\n", numNoSuccess);
+			//printf("numNoSuccess=%u\n", numNoSuccess);
 
 			// sort area of shame
 			cdi::sortKeys<cdi::intsPerKey<KMer<K>>()>(this->noSuccessArea,

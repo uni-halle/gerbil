@@ -74,7 +74,6 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 			_norm = false;
 			break;
 		case 'i':
-			std::cout << "setting verbose to true" << std::endl;
 			_verbose = true;
 			break;
 		IF_DEB_DEV(

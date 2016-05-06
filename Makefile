@@ -1,5 +1,5 @@
 CC = g++
-NVCC = nvcc
+NVCC = /usr/local/cuda/bin/nvcc
 LDFLAGS =  -L/usr/local/lib/
 
 COMPUTE_CAPABILITY := \
@@ -55,9 +55,6 @@ all: $(SRCS) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) -o  $(EXECUTABLE) $(OBJECTS) $(LDFLAGS) $(LIBS)
-
-prototype: $(SRCS) $(CU_OBJECTS)
-	$(CC) -std=c++11 $(CU_OBJECTS) src/prototype/main.cpp -o prototype
 	
 %.o: %.cu
 	$(CC) $(CFLAGS) -o "$@" "$<"
