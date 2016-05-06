@@ -48,3 +48,22 @@ Gerbil can be controlled by several command line options and flags.
 | `-v` | Show version number.      |     |
 | `-d` | Disable normalization of k-mers. If normalization is disabled, a k-mer and its reverse complement are considered as different k-mers. If normalization is enabled, we map both k-mer and its reverse complement to the same k-mer.       |     |
 | `-s` | Perform a system check and display information about your system.     |     |
+
+## Input Formats
+
+Gerbil supports the following input formats of genome read data in raw and compressed format: 
+ * fastq
+ * fasta
+ * staden
+
+## Output Format
+
+Gerbil uses an output format that is easy to parse and requires little space. The counter of each occuring k-mer is stored in binary form, followed by the corresponding byte-encoded k-mer. Each four bases of a k-mer are encoded in one single byte. We encode `A` with `00`, `C` with `01`, `G` with `10` and `T` with `11`. Most counters of k-meres are slightly smaller than the coverage of the genome data. We exploit this property by using only one byte for counters less than 255. A counter greater than or equal to 255 is encoded in five bytes. In the latter case, all bits of the first byte are set to 1. The remaining four bytes contain the counter in a conventional 32-bit unsigned integer.
+
+Examples (`X` means undefined):
+
+| Counter | k-mer   | Encoding                      |
+|:--------|:--------|:------------------------------|
+| 67      | AACGTG  | `00001011  00000110 1110XXXX` |
+| 345     | TGGATC  | `11111111 00000000 00000000 00000001 01011001 11101000 1101XXXX` |
+
