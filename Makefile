@@ -46,7 +46,7 @@ ifeq ($(GPU),true)
 	OBJECTS += $(CU_OBJECTS) 
 endif
 
-LIBS := -lboost_system -lboost_thread -lboost_filesystem -lboost_regex -lbz2 -lz
+LIBS := -lboost_system -lboost_thread -lboost_filesystem -lboost_regex -lbz2 -lz -lpthread
 
 RM := rm -rf
 EXECUTABLE := gerbil
