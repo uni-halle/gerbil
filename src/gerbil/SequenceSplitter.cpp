@@ -37,6 +37,9 @@ gerbil::SequenceSplitter::SequenceSplitter(
 }
 
 gerbil::SequenceSplitter::~SequenceSplitter() {
+	for(uint i = 0; i < SB_WRITER_THREADS_NUMBER; ++i)
+		delete _superBundleQueues[i];
+	delete[] _superBundleQueues;
 	delete[] _splitterThreads;
 	delete[] _mVal;
 	delete[] _mToBin;
