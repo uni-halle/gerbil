@@ -216,7 +216,7 @@ void gerbil::SuperWriter::process() {
 						SyncSwapQueueMPSC<SuperBundle>& superBundleQueue = *_superBundleQueues[tId];
 
 						// greedy buffering
-#if true
+#if false
 						SuperBundle* esb;
 						SuperBundle* emptySuperBundles[_maxBufferSize];
 						SuperBundle** emptySuperBundles_last = emptySuperBundles;
