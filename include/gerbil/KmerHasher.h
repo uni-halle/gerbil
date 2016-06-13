@@ -61,7 +61,7 @@ private:
 	const uint32_t _k;
 	const uint_tfn _tempFilesNumber;	// number of temporary files
 	TempFile* _tempFiles;				// array of temporary files
-	const uint32 _thresholdMin;		// minimal occurance of kmers to be output
+	const uint32 _thresholdMin;			// minimal occurance of kmers to be output
 	uint_tfn* _tempFilesOrder;			// processing order of temporary files
 	std::string _tempFolder;			// directory of temporary files ?
 	const bool _norm;					// whether to use normalized kmers
@@ -78,6 +78,8 @@ private:
 
 	uint64 _maxKmcHashtableSize;
 	uint32 _kMerBundlesNumber;
+
+	uint64 _histogram[HISTOGRAM_SIZE];
 
 	/**
 	 * Spawns Splitter Threads.
@@ -186,6 +188,9 @@ private:
 
 						// statistical / debug output
 						cpuHasher.printStat();
+						for(uint i = 0; i < HISTOGRAM_SIZE; ++i)
+							_histogram[i] = cpuHasher.getHistogramEntry(i) + gpuHasher.getHistogramEntry(i);
+
 						_kMersNumberCPU = cpuHasher.getKMersNumber();
 						_uKMersNumberCPU = cpuHasher.getUKMersNumber();
 						_btUKMersNumberCPU = cpuHasher.getBtUKMersNumber();
@@ -438,7 +443,8 @@ public:
 					0), _uKMersNumberCPU(0), _uKMersNumberGPU(0), _btUKMersNumberCPU(
 					0), _btUKMersNumberGPU(0), _maxKmcHashtableSize(
 					maxKmcHashtableSize), _syncSplitterCounter(0), _kMerBundlesNumber(
-					kMerBundlesNumber), _tempFilesOrder(tempFilesOrder) {
+					kMerBundlesNumber), _tempFilesOrder(tempFilesOrder)
+	{
 
 		// create array of threads
 		_processSplitterThreads =
@@ -457,6 +463,16 @@ public:
 		delete[] _processSplitterThreads;
 		delete distributor;
 		delete barrier;
+	}
+
+	void saveHistogram() {
+		FILE* file;
+		file = fopen((_tempFolder + "histogram.csv").c_str(), "wb");
+		fprintf(file, "counter; number of uk-mers\n");
+		for(uint i = 1; i < HISTOGRAM_SIZE; ++i)
+			fprintf(file, "  %3u; %9lu\n", i, _histogram[i]);
+		fprintf(file, ">=%3u; %9lu\n", HISTOGRAM_SIZE, _histogram[0]);
+		fclose(file);
 	}
 
 	/** Main working procedure for this class. */
@@ -1043,7 +1059,7 @@ public:
 		case 200:
 			process_template<200>();
 			break;
-		/*case 201:
+		case 201:
 			process_template<201>();
 			break;
 		case 202:
@@ -1342,7 +1358,7 @@ public:
 			break;
 		case 300:
 			process_template<300>();
-			break;*/
+			break;
 		default:
 			throw std::runtime_error(
 					std::string("Gerbil Error: Unsupported k"));

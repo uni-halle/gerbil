@@ -328,7 +328,7 @@ void gerbil::SuperWriter::process() {
 						delete sb;
 #endif
 
-						printf(">>>>>%5.2f\n", (double)s / n);
+						//printf(">>>>>%5.2f\n", (double)s / n);
 
 						IF_DEB(printf("close files\n"));
 						// close all temp files

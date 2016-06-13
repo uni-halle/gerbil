@@ -26,7 +26,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace gerbil {
 
-#define VERSION "0.1.3"
+#define VERSION "0.2.0"
 
 //#define DEB
 //#define DEV
@@ -79,6 +79,8 @@ namespace gerbil {
 
 #define FILL 0.4
 #define START_RATIO FILL
+
+#define HISTOGRAM_SIZE 512
 
 
 /*

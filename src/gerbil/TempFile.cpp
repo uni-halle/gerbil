@@ -91,7 +91,10 @@ void gerbil::TempFile::fprintStat(FILE* file) const{
 }
 
 void gerbil::TempFile::loadStats(string path, FILE* file) {
-	fscanf(file, "%lu\t%lu\t%lu\t%lu\t%lu\t%lu\n", &_id, &_smers, &_kmers, &_ukmers, &_size, &_filled);
+	if(!fscanf(file, "%lu\t%lu\t%lu\t%lu\t%lu\t%lu\n", &_id, &_smers, &_kmers, &_ukmers, &_size, &_filled)) {
+		cerr << "binStatFile in " << path << " is corrupted" << endl;
+		exit(1);
+	}
 	_ukmers = 0;
 	_filename = path + "temp" + to_string(_id) + ".bin";
 }

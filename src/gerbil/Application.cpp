@@ -24,12 +24,14 @@
  */
 // TODO: Reorder attributes
 gerbil::Application::Application() :
-		_k(0), _m(0), _tempFilesNumber(0), _sequenceSplitterThreadsNumber(0), _superSplitterThreadsNumber(
-				0), _hasherThreadsNumber(0), _thresholdMin(0), _memSize(0), _threadsNumber(
-				0), _norm(DEF_NORM), _verbose(DEF_VERBOSE), _skip(
-		false), _fastFileName(""), _tempFolderName(""), _kmcFileName(""), _tempFiles(
-		NULL), _rtRun1(0.0), _rtRun2(0.0), _memoryUsage1(0), _memoryUsage2(0), _readerParserThreadsNumber(
-				1), _numGPUs(0) {
+		_k(0), _m(0), _tempFilesNumber(0), _sequenceSplitterThreadsNumber(0),
+		_superSplitterThreadsNumber(0), _hasherThreadsNumber(0), _thresholdMin(0), _memSize(0),
+		_threadsNumber(0), _norm(DEF_NORM), _verbose(DEF_VERBOSE),
+		_fastFileName(""), _tempFolderName(""), _kmcFileName(""), _tempFiles(NULL),
+		_rtRun1(0.0), _rtRun2(0.0), _memoryUsage1(0), _memoryUsage2(0),
+		_readerParserThreadsNumber(1), _numGPUs(0),
+		_singleStep(0), _leaveBinStat(false), _histogram(0)
+{
 
 }
 
@@ -76,10 +78,14 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 		case 'i':
 			_verbose = true;
 			break;
-		IF_DEB_DEV(
-				case 'x':
-				_skip = true; break;
-		)
+		case 'x':
+			switch(argv[++i][0]) {
+			case '1': _singleStep = 1; break;
+			case '2': _singleStep = 2; break;
+			case 'b': _leaveBinStat = true; break;
+			case 'h': _histogram = true; break;
+			}
+			break;
 #ifdef GPU
 		case 'g':
 			// determine number of gpus to use
@@ -96,23 +102,18 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 			std::cout << VERSION << std::endl;
 			exit(0);
 		case 'h':
-			printf("__________________________________________\n");
+			printf("_________________________________________________________________\n");
 			printf("Gerbil version %s\n", VERSION);
-			printf("------------------------------------------\n");
-			printf(
-					"usage: gerbil [<option>|<flag>]* <input> <temp> <output>\n");
+			printf("-----------------------------------------------------------------\n");
+			printf("usage: gerbil [<option>|<flag>]* <input> <temp> <output>\n");
 			printf("<option>:\n");
 			printf("  -k <size>             size of kmers (default: 28)\n");
-			printf("  -m <size>     		size of minimizers (default: auto)\n");
-			printf(
-					"  -e <size>(M|G)B       size of ram usage (default: auto)\n");
-			printf(
-					"  -f <number>           number of temporary files (default: %u)\n",
+			printf("  -m <size>             size of minimizers (default: auto)\n");
+			printf("  -e <size>(M|G)B       size of ram usage (default: auto)\n");
+			printf("  -f <number>           number of temporary files (default: %u)\n",
 					DEF_TEMPFILES_NUMBER);
-			printf(
-					"  -t <number>           number of threads (default: auto)\n");
-			printf(
-					"  -l <count>            minimal count of k-mers (default: %u)\n",
+			printf("  -t <number>           number of threads (default: auto)\n");
+			printf("  -l <count>            minimal count of k-mers (default: %u)\n",
 					DEF_THRESHOLD_MIN);
 			printf("<flag>:\n");
 			printf("  -h                    show help\n");
@@ -124,10 +125,20 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 #ifdef GPU
 			printf("  -g                    enable gpu\n");
 #endif
-			IF_DEB_DEV(
-					printf("  -x                    skip first step (load temp files, experimental, no input file)\n");
-			)
-			printf("------------------------------------------\n");
+			printf("  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  \n");
+			printf("  -x <mode>             Debugging and testing purposes\n");
+			printf("                        (can be specified multiple times)\n");
+			printf("     modes:\n");
+			printf("        1               only step 1, leaves temporary files and a\n");
+			printf("                        binStatFile (with statistical stuff)\n");
+			printf("                        !Watch out: no <output>\n");
+			printf("        2               only step 2, requires temporary files and\n");
+			printf("                        the binStatFile\n");
+			printf("                        !Watch out: no <input>\n");
+			printf("        b               leaves the binStatFile\n");
+			printf("        h               saves the data for a histogram of the\n");
+			printf("                        uk-mers in the output folder\n");
+			printf("-----------------------------------------------------------------\n");
 			exit(0);
 		}
 	}
@@ -138,11 +149,12 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 		;
 	});
 
-	if (i + (_skip ? 2 : 3) <= argc) {
-		if (!_skip)
+	if (i + (_singleStep ? 2 : 3) <= argc) {
+		if (_singleStep != 2)
 			_fastFileName = std::string(argv[i++]);
 		_tempFolderName = std::string(argv[i++]);
-		_kmcFileName = std::string(argv[i++]);
+		if(_singleStep != 1)
+			_kmcFileName = std::string(argv[i++]);
 	}
 		IF_REL(
 				else { std::cerr << "missing parameters (-h for help)\n"; exit(1); })
@@ -158,12 +170,16 @@ void gerbil::Application::process(const int &argc, char** argv) {
 
 	parseParams(argc, argv);
 
-	if (!_skip)
+	if (_singleStep != 2)
 		run1();
 	else
 		loadBinStat();
 
-	run2();
+	if (_singleStep != 1)
+		run2();
+
+	if(_singleStep != 1 && !_leaveBinStat)
+		std::remove((_tempFolderName + "binStatFile.txt").c_str());
 }
 
 void gerbil::Application::run1() {
@@ -268,6 +284,9 @@ void gerbil::Application::run2() {
 
 	// save bin statistic
 	saveBinStat();
+
+	if(_histogram)
+		kmerHasher.saveHistogram();
 
 	// verbose output
 	if (_verbose) {
@@ -503,10 +522,10 @@ void gerbil::Application::distributeMemory2(
 	 B_TO_MB(kmcBundlesNumber * KMC_BUNDLE_DATA_SIZE_B),
 	 B_TO_MB(maxKmcHashtableSize * bytesPerHashEntry));*/
 
-	printf("avg Size     = %12lu\n", tempFileStatistic->getAvgKMersNumber());
-	printf("stabw        = %12lu\n", tempFileStatistic->getSdKMersNumber());
-	printf("max Size     = %12lu\n", tempFileStatistic->getMaxKMersNumber());
-	printf("avg+2Sd Size = %12lu\n", tempFileStatistic->getAvg2SdKMersNumber());
+	//printf("avg Size     = %12lu\n", tempFileStatistic->getAvgKMersNumber());
+	//printf("stabw        = %12lu\n", tempFileStatistic->getSdKMersNumber());
+	//printf("max Size     = %12lu\n", tempFileStatistic->getMaxKMersNumber());
+	//printf("avg+2Sd Size = %12lu\n", tempFileStatistic->getAvg2SdKMersNumber());
 }
 
 void gerbil::Application::checkSystem() {
@@ -555,137 +574,7 @@ void gerbil::Application::checkSystem() {
 void gerbil::Application::autocompleteParams() {
 #define SET_DEFAULT(x, d) if(!x) x = d
 
-	IF_DEB_DEV(/*hard coded params*/
-			if(_fastFileName.empty()) {
-				//_fastFileName = "/home/marius/cuda-workspace/files/test1.fastq";
-				//_fastFileName = "/home/marius/cuda-workspace/files/test1_short.fq";
-				//_fastFileName = "/home/marius/cuda-workspace/files/test_s.fq";
-				//_fastFileName = "/home/marius/cuda-workspace/files/test1_no_N.fastq";
-				//_fastFileName = "/media/marius/Seagate Backup Plus Drive/DNA_Sequence/Genom_human/fastq/SRR359301.filt.fastq";
-				//_fastFileName = "/media/marius/Seagate Backup Plus Drive/DNA_Sequence/Genom_human/fastq/SRR359301_1.filt.fastq";
-				//_fastFileName = "/media/marius/Seagate Backup Plus Drive/DNA_Sequence/F_vesca/fastq/single/F_vesca.fastq";
-				//_fastFileName = "/media/marius/45442ca4-f47a-4f21-b805-7ce1b92e9dd7/files/H_Sapiens/fastq/multiple/SRR359301_1.filt.fastq";
-				//_fastFileName = "/home/marius/cuda-workspace/files/tests";
-				//_fastFileName = "/media/marius/Seagate Backup Plus Drive/DNA_Sequence/F_vesca/fastq/multiple";
-				//_fastFileName = "/media/marius/Seagate Backup Plus Drive/DNA_Sequence/F_vesca/fastq/multiple/SRR072005.fastq";
-				//_fastFileName = "/media/marius/Seagate Backup Plus Drive/DNA_Sequence/F_vesca/fastq/multiple/";
-				//_fastFileName = "/media/marius/Seagate Backup Plus Drive/DNA_Sequence/G_Gallus/fastq/multiple/";
-				//_fastFileName = "/media/marius/Seagate Backup Plus Drive/DNA_Sequence/Genom_human/fastq/multiple/";
-
-				// srcpath
-				_fastFileName = "/media/marius/Seagate Backup Plus Drive/DNA_Sequence/";
-
-/////////////////////////////////////////////////////////////////////////////////////
-// dataset
-#define VESCA		// SAPIENS, VESCA, GALLUS, BALBISIANA
-// compr
-//#define BZIP2		// GZIP, BZIP2
-// file type
-#define FASTQ		// FASTQ FASTA ML
-// single or multiple
-#define ONE			//SINGLE, ONE, ALL
-#define LIST
-/////////////////////////////////////////////////////////////////////////////////////
-
-#ifdef SAPIENS
-				_fastFileName += "H_Sapiens/";
-#endif
-#ifdef VESCA
-				_fastFileName += "F_Vesca/";
-#endif
-#ifdef GALLUS
-				_fastFileName += "G_Gallus/";
-#endif
-#ifdef AUREA
-				_fastFileName += "G_Aurea/";
-#endif
-#ifdef BALBISIANA
-				_fastFileName += "M_Balbisiana/";
-#endif
-#ifdef ABSTRACT
-				_fastFileName += "Abstract/";
-#endif
-
-#ifdef FASTQ
-				_fastFileName += "fastq/";
-#endif
-#ifdef FASTA
-				_fastFileName += "fasta/";
-#endif
-#ifdef ML
-				_fastFileName += "ml/";
-#endif
-
-#if defined(GZIP) or defined(BZIP2)
-				_fastFileName += "compr/";
-#endif
-
-#ifdef GZIP
-				_fastFileName += "gz/";
-#endif
-
-#ifdef BZIP2
-				_fastFileName += "bz2/";
-#endif
-
-#if defined(ONE) or (not defined(SINGLE) and not defined(LIST))
-				_fastFileName += "multiple/";
-#endif
-
-#if defined(LIST) and not defined(ONE)
-				_fastFileName += "list.txt";
-#endif
-
-				// specific file
-#if defined(ONE) or defined(SINGLE)
-#ifdef VESCA
-				_fastFileName += "SRR072005";
-#endif
-#ifdef SAPIENS
-				_fastFileName += "SRR359301_1.filt";
-#endif
-#ifdef FASTQ
-				_fastFileName += ".fastq";
-#endif
-#ifdef FASTA
-				_fastFileName += ".fasta";
-#endif
-#ifdef ML
-				_fastFileName += ".ml";
-#endif
-#ifdef GZIP
-				_fastFileName += ".gz";
-#endif
-
-#ifdef BZIP2
-				_fastFileName += ".bz2";
-#endif
-#endif
-				//_fastFileName = "/home/marius/cuda-workspace/files/test1.fastq";
-			}
-
-			if(_tempFolderName.empty()) {
-				_tempFolderName = "/home/marius/Schreibtisch/kmc/temp/";
-				//_tempFolderName = "/media/marius/Seagate Backup Plus Drive/temp/";
-				//_tempFolderName = "/media/marius/45442ca4-f47a-4f21-b805-7ce1b92e9dd7/temp/temp-gpukmc/";
-			}
-
-			if(_kmcFileName.empty()) {
-				//_kmcFileName = "/home/marius/cuda-workspace/files/out/out.bin";
-				_kmcFileName = "/media/marius/Seagate Backup Plus Drive/out/out.bin";
-			}
-			SET_DEFAULT(_k, 28);
-			SET_DEFAULT(_m, 7);
-			SET_DEFAULT(_tempFilesNumber, 512);
-			SET_DEFAULT(_thresholdMin, 3);
-			SET_DEFAULT(_memSize, 6 * 1024);
-			_norm = true;
-			_skip = false;
-			_numGPUs = 0;
-	);
-
 	// set to default values
-	uint x;
 	SET_DEFAULT(_k, DEF_KMER_SIZE);
 	SET_DEFAULT(_threadsNumber,
 			std::thread::hardware_concurrency() < MIN_THREADS_NUMBER ? DEF_THREADS_NUMBER : std::thread::hardware_concurrency());
@@ -758,7 +647,7 @@ void gerbil::Application::checkParams() {
 		}
 
 	// check file paths
-	if (_fastFileName.empty()) {
+	if (_fastFileName.empty() && _singleStep != 2) {
 		printf("input file is unknown\n");
 		exit(1);
 	}
@@ -766,7 +655,7 @@ void gerbil::Application::checkParams() {
 		printf("temp folder is unknown\n");
 		exit(1);
 	}
-	if (_kmcFileName.empty()) {
+	if (_kmcFileName.empty() && _singleStep != 1) {
 		printf("output file is unknown\n");
 		exit(1);
 	}

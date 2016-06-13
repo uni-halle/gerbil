@@ -40,12 +40,12 @@ class Application {
 	uint32_t _k;							// size of k-mers
 	uint8 _m;								// size of minimizers
 	uint_tfn _tempFilesNumber;				// number of tempFiles
-	uint8 _sequenceSplitterThreadsNumber;// number of threads for SequenceSplitter
-	uint8 _superSplitterThreadsNumber;	// number of threads for SuperSplitter
+	uint8 _sequenceSplitterThreadsNumber;	// number of threads for SequenceSplitter
+	uint8 _superSplitterThreadsNumber;		// number of threads for SuperSplitter
 	uint8 _hasherThreadsNumber;				// number of hash/extract threads
 	std::string _fastFileName;				// filename of fast[a/q] (with path)
 	std::string _tempFolderName;			// foldername of temp (with path)
-	std::string _kmcFileName;					// filename of kmc (with path)
+	std::string _kmcFileName;				// filename of kmc (with path)
 	uint32 _thresholdMin;					// min k-mer counter to store
 	uint64 _memSize;						// size of ram in MB
 	uint8 _threadsNumber;					// total number of threads
@@ -53,7 +53,9 @@ class Application {
 	uint8_t _numGPUs;						// number of gpu's to use
 	bool _norm;								// normalization of kmers enabled
 	bool _verbose;							// show info/progress
-	bool _skip;								// skip first step
+	uint _singleStep;						// processes only one step (default: 0 => all steps)
+	bool _leaveBinStat;						// leaves binStatFile
+	bool _histogram;						// prints histogram
 
 	TempFile* _tempFiles;					// bin files (step1 --> step2)
 

@@ -9,7 +9,5 @@ int main(int argc, char** argv) {
 	Application application;
 	application.process(argc, argv);
 
-	std::cout << "exit" << std::endl;
-
 	return 0;
 }

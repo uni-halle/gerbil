@@ -32,7 +32,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace gerbil {
 namespace cpu {
 
-#define HT_HISTO_SIZE 512
 
 #ifdef HT_JUMPS
 #define IF_HT_JUMPS(x) x
@@ -46,11 +45,6 @@ namespace cpu {
 #define IF_HT_FAILS(x)
 #endif
 
-#ifdef HT_HISTO
-#define IF_HT_HISTO(x) x
-#else
-#define IF_HT_HISTO(x)
-#endif
 
 /**
  * A HashTable for Counting of Kmers.
@@ -83,9 +77,7 @@ class HasherTask {
 	std::atomic<uint64> _uKMersNumber;
 	std::atomic<uint64> _btUKMersNumber;
 
-	IF_HT_HISTO(
-			atomic<uint64> _histo[HT_HISTO_SIZE];
-	)
+	std::atomic<uint64> _histogram[HISTOGRAM_SIZE];
 
 	uint32 getMaxSteps() const;
 
@@ -105,6 +97,10 @@ public:
 	}
 	inline uint64 getBtUKMersNumber() const {
 		return _btUKMersNumber.load();
+	}
+
+	uint64 getHistogramEntry(const uint i) {
+		return _histogram[i].load();
 	}
 
 	void print();
@@ -131,10 +127,8 @@ HasherTask<K>::HasherTask(const byte &threadsNumber,
 	//stat
 	IF_HT_FAILS(_fKMersNumber.store(0);)
 	IF_HT_JUMPS(_jumps.store(0);)
-	IF_HT_HISTO(
-			for(uint i(0); i < HT_HISTO_SIZE; ++i)
-			_histo[i].store(0);
-	)
+	for(uint i(0); i < HISTOGRAM_SIZE; ++i)
+		_histogram[i].store(0);
 }
 
 template<unsigned K>
@@ -151,9 +145,8 @@ IF_HT_JUMPS(printf("jumps/kmer     : %15.2f\n", (double)_jumps.load() / _kMersNu
 
 double r = (double) (sizeof(KMer<K> ) + sizeof(uint_cv)) / 1024 / 1024;
 uint64 maxSize = _maxPartSize * _threadsNumber;
-printf("size unused    : %12lu of %lu\n", maxSize - _maxSizeUsage, maxSize);
-printf("memory unused  : %.0f MB of %.0f MB\n", (maxSize - _maxSizeUsage) * r,
-		maxSize * r);
+//printf("size unused    : %12lu of %lu\n", maxSize - _maxSizeUsage, maxSize);
+//printf("memory unused  : %.0f MB of %.0f MB\n", (maxSize - _maxSizeUsage) * r, maxSize * r);
 }
 
 #define KMCHT_fill() {																\
@@ -203,7 +196,7 @@ printf("memory unused  : %.0f MB of %.0f MB\n", (maxSize - _maxSizeUsage) * r,
 				if(val) {/* key not empty*/													\
 					++binUKMers;															\
 					binKMers += val;														\
-					IF_HT_HISTO(++histo[val < HT_HISTO_SIZE ? val : 0];)					\
+					++histogram[val < HISTOGRAM_SIZE ? val : 0];							\
 					if(_thresholdMin > val)													\
 						++btUKMersNumber;													\
 					else if(!curKmcBundle->add<K>(key, val)) {								\
@@ -221,7 +214,7 @@ printf("memory unused  : %.0f MB of %.0f MB\n", (maxSize - _maxSizeUsage) * r,
 		if(val) {/* key not empty*/\
 			++binUKMers;															\
 			binKMers += val;														\
-			IF_HT_HISTO(++histo[val < HT_HISTO_SIZE ? val : 0];)					\
+			++histogram[val < HISTOGRAM_SIZE ? val : 0];							\
 			if(_thresholdMin > val)													\
 				++btUKMersNumber;													\
 			else if(!curKmcBundle->add<K>(key, val)) {								\
@@ -238,7 +231,7 @@ printf("memory unused  : %.0f MB of %.0f MB\n", (maxSize - _maxSizeUsage) * r,
 		for(; curKey < endKey; ++curKey) {												\
 			if(!curKey->isEmpty()) {													\
 				binKMers += (val = *(values + (curKey - keys)));						\
-				IF_HT_HISTO(++histo[val < HT_HISTO_SIZE ? val : 0];)					\
+				++histogram[val < HISTOGRAM_SIZE ? val : 0];							\
 				if(_thresholdMin > val)													\
 					++btUKMersNumber;													\
 				else if(!curKmcBundle->add<K>(*curKey, val)) {							\
@@ -285,6 +278,11 @@ for (uint8_t i(0); i < _threadsNumber; ++i) {
 								sw.start();
 						)
 
+						// initialize histogram
+						uint64 histogram[HISTOGRAM_SIZE];
+						for(size_t i(0); i < HISTOGRAM_SIZE; ++i)
+							histogram[i] = 0;
+
 						KMerBundle<K>* kmb = new KMerBundle<K>();
 						KMerBundle<K>* skmb = new KMerBundle<K>();
 						KmcBundle* curKmcBundle = new KmcBundle();
@@ -315,11 +313,6 @@ for (uint8_t i(0); i < _threadsNumber; ++i) {
 						uint64 maxPartSizeUsage = 0;
 
 						IF_HT_JUMPS(uint64 jumps = 0;)
-						IF_HT_HISTO(
-								uint64 histo[HT_HISTO_SIZE];
-								for(uint i(0); i < HT_HISTO_SIZE; ++i)
-								histo[i] = 0;
-						)
 
 						bool notEmpty = kMerQueue->swapPop(kmb);
 						uint_tfn curTempFileId = notEmpty ? kmb->getTempFileId() : 0;
@@ -430,10 +423,8 @@ for (uint8_t i(0); i < _threadsNumber; ++i) {
 						if(!curKmcBundle->isEmpty())
 						_kmcSyncSwapQueue->swapPush(curKmcBundle);
 
-						IF_HT_HISTO(
-								for(uint i(0); i < HT_HISTO_SIZE; ++i)
-								_histo[i] += histo[i];
-						)
+						for(size_t i(0); i < HISTOGRAM_SIZE; ++i)
+							_histogram[i] += histogram[i];
 
 						delete kmb;
 						delete skmb;
@@ -469,6 +460,7 @@ for (uint i = 0; i < _threadsNumber; ++i) {
 	delete _threads[i];
 }
 delete[] _threads;
+/*
 IF_HT_HISTO(
 	printf("-------------------------------------\n");
 	printf("count\tnumber\n");
@@ -477,6 +469,7 @@ IF_HT_HISTO(
 	printf(">=%u\t%lu\n", HT_HISTO_SIZE, _histo[0].load());
 	printf("-------------------------------------\n");
 )
+*/
 }
 
 // private

@@ -62,6 +62,8 @@ private:
 	KMerBundle<K>* _kmb;					// working kmer bundle
 	KmcBundle* curKmcBundle;			// working kmc bundle
 
+	uint64 _histogram[HISTOGRAM_SIZE];
+
 public:
 	/**
 	 * Main Constructor.
@@ -88,6 +90,11 @@ public:
 				1);
 		_kmb = new KMerBundle<K>();
 		curKmcBundle = new KmcBundle();
+
+		// initialize histogram
+		uint64 histogram[HISTOGRAM_SIZE];
+		for(size_t i(0); i < HISTOGRAM_SIZE; ++i)
+			histogram[i] = 0;
 	}
 
 	~KmerCountingHashTable() {
@@ -96,6 +103,10 @@ public:
 		delete tempBuffer;
 		delete _kmb;
 		delete curKmcBundle;
+	}
+
+	uint64 getHistogramEntry(const uint i) {
+		return _histogram[i];
 	}
 
 	/**
@@ -195,7 +206,7 @@ public:
 				curCount = curKeyValuePair->getCount();
 
 				if (!curKey->isEmpty() && curCount > 0) {
-
+					++_histogram[curCount < HISTOGRAM_SIZE ? curCount : 0];
 					if (curCount >= threshold) {
 
 						// copy kmer count to output queue
@@ -205,10 +216,10 @@ public:
 						}
 						curKey->clear();
 					} else {
-						btUKMersNumber++;
+						++btUKMersNumber;
 					}
 
-					uKMersNumber++;
+					++uKMersNumber;
 					kMersNumber += curCount;
 				}
 			}
@@ -324,7 +335,7 @@ public:
 				if (kmers[j] != lastKey) {
 
 					if (!lastKey.isEmpty()) {
-
+						++_histogram[curCount < HISTOGRAM_SIZE ? curCount : 0];
 						if (curCount >= threshold) {
 
 							// copy kmer count to output queue
@@ -333,10 +344,10 @@ public:
 								curKmcBundle->add<K>(lastKey, curCount);
 							}
 						} else {
-							btUKMersNumber++;
+							++btUKMersNumber;
 						}
 
-						uKMersNumber++;
+						++uKMersNumber;
 						kMersNumber += curCount;
 					}
 
@@ -363,7 +374,7 @@ public:
 
 						// put out kmer count
 						if (!lastKey.isEmpty()) {
-
+							++_histogram[curCount < HISTOGRAM_SIZE ? curCount : 0];
 							if (curCount >= threshold) {
 
 								// copy kmer count to output queue
@@ -388,7 +399,7 @@ public:
 
 			// insert last seen kmer
 			if (!lastKey.isEmpty()) {
-
+				++_histogram[curCount < HISTOGRAM_SIZE ? curCount : 0];
 				if (curCount >= threshold) {
 					// copy kmer count to output queue
 					if (!curKmcBundle->add<K>(lastKey, curCount)) {

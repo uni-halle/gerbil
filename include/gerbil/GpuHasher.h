@@ -65,6 +65,8 @@ private:
 	std::atomic<uint64_t> _uKMersNumber;	// number of unique kmers processed
 	std::atomic<uint64_t> _btUKMersNumber;// number of unique kmers below threshold
 
+	std::atomic<uint64> _histogram[HISTOGRAM_SIZE];
+
 public:
 
 	/**
@@ -84,6 +86,9 @@ public:
 
 		_threads = new std::thread*[_numThreads];
 		
+		for(uint i(0); i < HISTOGRAM_SIZE; ++i)
+			_histogram[i].store(0);
+
 #ifdef GPU
 		tables = new KmerCountingHashTable<K>*[_numThreads];
 		// crate thread-own gpu hash tables
@@ -193,6 +198,9 @@ public:
 						_uKMersNumber += table->getUKMersNumber();
 						_btUKMersNumber += table->getUKMersNumberBelowThreshold();
 
+						for(uint i = 0; i < HISTOGRAM_SIZE; ++i)
+							_histogram[i] += table->getHistogramEntry(i);
+
 						// clean up
 						delete kmb;
 
@@ -227,6 +235,10 @@ public:
 	}
 	inline uint64_t getBtUKMersNumber() const {
 		return _btUKMersNumber.load();
+	}
+
+	uint64 getHistogramEntry(const uint i) {
+		return _histogram[i].load();
 	}
 };
 
