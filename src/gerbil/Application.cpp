@@ -53,7 +53,6 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 			break;
 		case 'l':
 			_thresholdMin = atoi(argv[++i]);
-			std::cout << "set threshmin to " << _thresholdMin << std::endl;
 			break;
 		case 't':
 			_threadsNumber = atoi(argv[++i]);
@@ -92,7 +91,6 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 			int num;
 			cudaGetDeviceCount(&num);
 			_numGPUs = std::min(num, 8);
-			//_numGPUs = 1;
 			break;
 #endif
 		case 's':
@@ -160,7 +158,6 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 				else { std::cerr << "missing parameters (-h for help)\n"; exit(1); })
 
 	autocompleteParams();
-	std::cout << "verbose=" << _verbose << std::endl;
 	if (_verbose)
 		printParamsInfo();
 	checkParams();

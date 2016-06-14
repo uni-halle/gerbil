@@ -93,11 +93,11 @@ namespace gerbil {
 
 #define DEF_KMER_SIZE 28
 #define MIN_KMER_SIZE 8
-#define MAX_KMER_SIZE 250
+#define MAX_KMER_SIZE 479
 
 #define DEF_MEMORY_SIZE ((uint64)  4 * 1024)
 #define MIN_MEMORY_SIZE ((uint64)       512)
-#define MAX_MEMORY_SIZE ((uint64) 32 * 1024)
+#define MAX_MEMORY_SIZE ((uint64) 1024 * 1024 * 1024)
 
 #define DEF_TEMPFILES_NUMBER 512
 #define MIN_TEMPFILES_NUMBER 2

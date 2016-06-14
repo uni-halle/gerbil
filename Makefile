@@ -1,12 +1,17 @@
 CC = g++
-NVCC = /usr/local/cuda/bin/nvcc
+CFLAGS = -c -std=c++11 -O3
 LDFLAGS =  -L/usr/local/lib/
+
+CUDA_PATH = /usr/local/cuda/
 
 COMPUTE_CAPABILITY := \
 -gencode arch=compute_20,code=sm_20 \
 -gencode arch=compute_30,code=sm_30 \
 -gencode arch=compute_50,code=sm_50 \
 -gencode arch=compute_52,code=sm_52
+
+NVCC = $(CUDA_PATH)/bin/nvcc
+NVCCFLAGS = $(CFLAGS) $(COMPUTE_CAPABILITY) -D_FORCE_INLINES -DGPU
 
 # Makefile for gerbil project
 GPU = true
@@ -34,16 +39,14 @@ src/gerbil/gerbil.cpp
 CPP_OBJECTS := $(CPP_SRCS:.cpp=.o) 
 CU_OBJECTS := $(CU_SRCS:.cu=.o)
 
-CFLAGS = -c -std=c++11 -O3
-
 SRCS = $(CPP_SRCS)
 OBJECTS = $(CPP_OBJECTS)
 
 ifeq ($(GPU),true)
-	CC = $(NVCC)
-	CFLAGS += -DGPU $(COMPUTE_CAPABILITY) -D_FORCE_INLINES
+	CFLAGS += -DGPU -I$(CUDA_PATH)/include/
 	SRCS += $(CU_SRCS)
-	OBJECTS += $(CU_OBJECTS) 
+	OBJECTS += $(CU_OBJECTS)
+	LDFLAGS = -L$(CUDA_PATH)/lib64 -lcudart
 endif
 
 LIBS := -lboost_system -lboost_thread -lboost_filesystem -lboost_regex -lbz2 -lz -lpthread
@@ -57,7 +60,7 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) -o  $(EXECUTABLE) $(OBJECTS) $(LDFLAGS) $(LIBS)
 	
 %.o: %.cu
-	$(CC) $(CFLAGS) -o "$@" "$<"
+	$(NVCC) $(CFLAGS) -o "$@" "$<"
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) -o "$@" "$<"
@@ -65,6 +68,6 @@ $(EXECUTABLE): $(OBJECTS)
 
 # Other Targets
 clean:
-	-$(RM) $(OBJECTS) $(EXECUTABLE) prototype
+	-$(RM) $(OBJECTS) $(CU_OBJECTS) $(EXECUTABLE) prototype
 
 .PHONY: all clean

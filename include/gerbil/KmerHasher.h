@@ -61,7 +61,7 @@ private:
 	const uint32_t _k;
 	const uint_tfn _tempFilesNumber;	// number of temporary files
 	TempFile* _tempFiles;				// array of temporary files
-	const uint32 _thresholdMin;			// minimal occurance of kmers to be output
+	const uint32 _thresholdMin;		// minimal occurance of kmers to be output
 	uint_tfn* _tempFilesOrder;			// processing order of temporary files
 	std::string _tempFolder;			// directory of temporary files ?
 	const bool _norm;					// whether to use normalized kmers
@@ -189,7 +189,7 @@ private:
 						// statistical / debug output
 						cpuHasher.printStat();
 						for(uint i = 0; i < HISTOGRAM_SIZE; ++i)
-							_histogram[i] = cpuHasher.getHistogramEntry(i) + gpuHasher.getHistogramEntry(i);
+						_histogram[i] = cpuHasher.getHistogramEntry(i) + gpuHasher.getHistogramEntry(i);
 
 						_kMersNumberCPU = cpuHasher.getKMersNumber();
 						_uKMersNumberCPU = cpuHasher.getUKMersNumber();
@@ -443,8 +443,7 @@ public:
 					0), _uKMersNumberCPU(0), _uKMersNumberGPU(0), _btUKMersNumberCPU(
 					0), _btUKMersNumberGPU(0), _maxKmcHashtableSize(
 					maxKmcHashtableSize), _syncSplitterCounter(0), _kMerBundlesNumber(
-					kMerBundlesNumber), _tempFilesOrder(tempFilesOrder)
-	{
+					kMerBundlesNumber), _tempFilesOrder(tempFilesOrder) {
 
 		// create array of threads
 		_processSplitterThreads =
@@ -469,7 +468,7 @@ public:
 		FILE* file;
 		file = fopen((_tempFolder + "histogram.csv").c_str(), "wb");
 		fprintf(file, "counter; number of uk-mers\n");
-		for(uint i = 1; i < HISTOGRAM_SIZE; ++i)
+		for (uint i = 1; i < HISTOGRAM_SIZE; ++i)
 			fprintf(file, "  %3u; %9lu\n", i, _histogram[i]);
 		fprintf(file, ">=%3u; %9lu\n", HISTOGRAM_SIZE, _histogram[0]);
 		fclose(file);
@@ -1358,6 +1357,543 @@ public:
 			break;
 		case 300:
 			process_template<300>();
+			break;
+		case 301:
+			process_template<301>();
+			break;
+		case 302:
+			process_template<302>();
+			break;
+		case 303:
+			process_template<303>();
+			break;
+		case 304:
+			process_template<304>();
+			break;
+		case 305:
+			process_template<305>();
+			break;
+		case 306:
+			process_template<306>();
+			break;
+		case 307:
+			process_template<307>();
+			break;
+		case 308:
+			process_template<308>();
+			break;
+		case 309:
+			process_template<309>();
+			break;
+		case 310:
+			process_template<310>();
+			break;
+		case 311:
+			process_template<311>();
+			break;
+		case 312:
+			process_template<312>();
+			break;
+		case 313:
+			process_template<313>();
+			break;
+		case 314:
+			process_template<314>();
+			break;
+		case 315:
+			process_template<315>();
+			break;
+		case 316:
+			process_template<316>();
+			break;
+		case 317:
+			process_template<317>();
+			break;
+		case 318:
+			process_template<318>();
+			break;
+		case 319:
+			process_template<319>();
+			break;
+		case 320:
+			process_template<320>();
+			break;
+		case 321:
+			process_template<321>();
+			break;
+		case 322:
+			process_template<322>();
+			break;
+		case 323:
+			process_template<323>();
+			break;
+		case 324:
+			process_template<324>();
+			break;
+		case 325:
+			process_template<325>();
+			break;
+		case 326:
+			process_template<326>();
+			break;
+		case 327:
+			process_template<327>();
+			break;
+		case 328:
+			process_template<328>();
+			break;
+		case 329:
+			process_template<329>();
+			break;
+		case 330:
+			process_template<330>();
+			break;
+		case 331:
+			process_template<331>();
+			break;
+		case 332:
+			process_template<332>();
+			break;
+		case 333:
+			process_template<333>();
+			break;
+		case 334:
+			process_template<334>();
+			break;
+		case 335:
+			process_template<335>();
+			break;
+		case 336:
+			process_template<336>();
+			break;
+		case 337:
+			process_template<337>();
+			break;
+		case 338:
+			process_template<338>();
+			break;
+		case 339:
+			process_template<339>();
+			break;
+		case 340:
+			process_template<340>();
+			break;
+		case 341:
+			process_template<341>();
+			break;
+		case 342:
+			process_template<342>();
+			break;
+		case 343:
+			process_template<343>();
+			break;
+		case 344:
+			process_template<344>();
+			break;
+		case 345:
+			process_template<345>();
+			break;
+		case 346:
+			process_template<346>();
+			break;
+		case 347:
+			process_template<347>();
+			break;
+		case 348:
+			process_template<348>();
+			break;
+		case 349:
+			process_template<349>();
+			break;
+		case 350:
+			process_template<350>();
+			break;
+		case 351:
+			process_template<351>();
+			break;
+		case 352:
+			process_template<352>();
+			break;
+		case 353:
+			process_template<353>();
+			break;
+		case 354:
+			process_template<354>();
+			break;
+		case 355:
+			process_template<355>();
+			break;
+		case 356:
+			process_template<356>();
+			break;
+		case 357:
+			process_template<357>();
+			break;
+		case 358:
+			process_template<358>();
+			break;
+		case 359:
+			process_template<359>();
+			break;
+		case 360:
+			process_template<360>();
+			break;
+		case 361:
+			process_template<361>();
+			break;
+		case 362:
+			process_template<362>();
+			break;
+		case 363:
+			process_template<363>();
+			break;
+		case 364:
+			process_template<364>();
+			break;
+		case 365:
+			process_template<365>();
+			break;
+		case 366:
+			process_template<366>();
+			break;
+		case 367:
+			process_template<367>();
+			break;
+		case 368:
+			process_template<368>();
+			break;
+		case 369:
+			process_template<369>();
+			break;
+		case 370:
+			process_template<370>();
+			break;
+		case 371:
+			process_template<371>();
+			break;
+		case 372:
+			process_template<372>();
+			break;
+		case 373:
+			process_template<373>();
+			break;
+		case 374:
+			process_template<374>();
+			break;
+		case 375:
+			process_template<375>();
+			break;
+		case 376:
+			process_template<376>();
+			break;
+		case 377:
+			process_template<377>();
+			break;
+		case 378:
+			process_template<378>();
+			break;
+		case 379:
+			process_template<379>();
+			break;
+		case 380:
+			process_template<380>();
+			break;
+		case 381:
+			process_template<381>();
+			break;
+		case 382:
+			process_template<382>();
+			break;
+		case 383:
+			process_template<383>();
+			break;
+		case 384:
+			process_template<384>();
+			break;
+		case 385:
+			process_template<385>();
+			break;
+		case 386:
+			process_template<386>();
+			break;
+		case 387:
+			process_template<387>();
+			break;
+		case 388:
+			process_template<388>();
+			break;
+		case 389:
+			process_template<389>();
+			break;
+		case 390:
+			process_template<390>();
+			break;
+		case 391:
+			process_template<391>();
+			break;
+		case 392:
+			process_template<392>();
+			break;
+		case 393:
+			process_template<393>();
+			break;
+		case 394:
+			process_template<394>();
+			break;
+		case 395:
+			process_template<395>();
+			break;
+		case 396:
+			process_template<396>();
+			break;
+		case 397:
+			process_template<397>();
+			break;
+		case 398:
+			process_template<398>();
+			break;
+		case 399:
+			process_template<399>();
+			break;
+		case 400:
+			process_template<400>();
+			break;
+		case 401:
+			process_template<401>();
+			break;
+		case 402:
+			process_template<402>();
+			break;
+		case 403:
+			process_template<403>();
+			break;
+		case 404:
+			process_template<404>();
+			break;
+		case 405:
+			process_template<405>();
+			break;
+		case 406:
+			process_template<406>();
+			break;
+		case 407:
+			process_template<407>();
+			break;
+		case 408:
+			process_template<408>();
+			break;
+		case 409:
+			process_template<409>();
+			break;
+		case 410:
+			process_template<410>();
+			break;
+		case 411:
+			process_template<411>();
+			break;
+		case 412:
+			process_template<412>();
+			break;
+		case 413:
+			process_template<413>();
+			break;
+		case 414:
+			process_template<414>();
+			break;
+		case 415:
+			process_template<415>();
+			break;
+		case 416:
+			process_template<416>();
+			break;
+		case 417:
+			process_template<417>();
+			break;
+		case 418:
+			process_template<418>();
+			break;
+		case 419:
+			process_template<419>();
+			break;
+		case 420:
+			process_template<420>();
+			break;
+		case 421:
+			process_template<421>();
+			break;
+		case 422:
+			process_template<422>();
+			break;
+		case 423:
+			process_template<423>();
+			break;
+		case 424:
+			process_template<424>();
+			break;
+		case 425:
+			process_template<425>();
+			break;
+		case 426:
+			process_template<426>();
+			break;
+		case 427:
+			process_template<427>();
+			break;
+		case 428:
+			process_template<428>();
+			break;
+		case 429:
+			process_template<429>();
+			break;
+		case 430:
+			process_template<430>();
+			break;
+		case 431:
+			process_template<431>();
+			break;
+		case 432:
+			process_template<432>();
+			break;
+		case 433:
+			process_template<433>();
+			break;
+		case 434:
+			process_template<434>();
+			break;
+		case 435:
+			process_template<435>();
+			break;
+		case 436:
+			process_template<436>();
+			break;
+		case 437:
+			process_template<437>();
+			break;
+		case 438:
+			process_template<438>();
+			break;
+		case 439:
+			process_template<439>();
+			break;
+		case 440:
+			process_template<440>();
+			break;
+		case 441:
+			process_template<441>();
+			break;
+		case 442:
+			process_template<442>();
+			break;
+		case 443:
+			process_template<443>();
+			break;
+		case 444:
+			process_template<444>();
+			break;
+		case 445:
+			process_template<445>();
+			break;
+		case 446:
+			process_template<446>();
+			break;
+		case 447:
+			process_template<447>();
+			break;
+		case 448:
+			process_template<448>();
+			break;
+		case 449:
+			process_template<449>();
+			break;
+		case 450:
+			process_template<450>();
+			break;
+		case 451:
+			process_template<451>();
+			break;
+		case 452:
+			process_template<452>();
+			break;
+		case 453:
+			process_template<453>();
+			break;
+		case 454:
+			process_template<454>();
+			break;
+		case 455:
+			process_template<455>();
+			break;
+		case 456:
+			process_template<456>();
+			break;
+		case 457:
+			process_template<457>();
+			break;
+		case 458:
+			process_template<458>();
+			break;
+		case 459:
+			process_template<459>();
+			break;
+		case 460:
+			process_template<460>();
+			break;
+		case 461:
+			process_template<461>();
+			break;
+		case 462:
+			process_template<462>();
+			break;
+		case 463:
+			process_template<463>();
+			break;
+		case 464:
+			process_template<464>();
+			break;
+		case 465:
+			process_template<465>();
+			break;
+		case 466:
+			process_template<466>();
+			break;
+		case 467:
+			process_template<467>();
+			break;
+		case 468:
+			process_template<468>();
+			break;
+		case 469:
+			process_template<469>();
+			break;
+		case 470:
+			process_template<470>();
+			break;
+		case 471:
+			process_template<471>();
+			break;
+		case 472:
+			process_template<472>();
+			break;
+		case 473:
+			process_template<473>();
+			break;
+		case 474:
+			process_template<474>();
+			break;
+		case 475:
+			process_template<475>();
+			break;
+		case 476:
+			process_template<476>();
+			break;
+		case 477:
+			process_template<477>();
+			break;
+		case 478:
+			process_template<478>();
+			break;
+		case 479:
+			process_template<479>();
 			break;
 		default:
 			throw std::runtime_error(

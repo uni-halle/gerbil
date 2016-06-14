@@ -75,9 +75,6 @@ gerbil::FastReader::FastReader(const uint32_t &frBlocksNumber,
 	_threadsNumber = someComprFastFiles ? 2 : 1;
 	_readerParserThreadsNumber = _threadsNumber;
 
-	std::cout << "using " << (int) _readerParserThreadsNumber << " reader threads" << std::endl;
-
-
 	_processThreads = new std::thread*[_threadsNumber];
 
 	_syncSwapQueues = new SyncSwapQueueSPSC<FastBundle>*[_threadsNumber];

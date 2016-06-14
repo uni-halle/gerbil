@@ -40,7 +40,7 @@ Gerbil can be controlled by several command line options and flags.
 
 | Option                  | Description   | Default |
 |:------------------------|:--------------| -------:|
-| `-k int`        | Set the value of k, i.e. the length of k-mers to be counted. Supported k currently ranges from 8 to 200. Larger k can easily be activated. | 28 |
+| `-k int`        | Set the value of k, i.e. the length of k-mers to be counted. Supported k currently ranges from 8 to 300. | 28 |
 | `-m int`       | Set the length m of minimizers.      |   auto |
 | `-e int(MB|GB)` | Restrict the maximal size of main memory in `MB` or `GB` that Gerbil is allowed to use.      |    auto |
 | `-f int` | Set the number of temporary files.      |    512 |
