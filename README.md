@@ -52,7 +52,7 @@ Gerbil can be controlled by several command line options and flags.
 | `-d` | Disable normalization of k-mers. If normalization is disabled, a k-mer and its reverse complement are considered as different k-mers. If normalization is enabled, we map both k-mer and its reverse complement to the same k-mer.       |     |
 | `-s` | Perform a system check and display information about your system.     |     |
 | `-x 1` | Stop execution after Phase One. Do not remove temporary files and `binStatFile` (with statistical information). Watch out: no `output` allowed. |     |
-| `-x 2` | Only execute Phase Two. Requires temporary files and `binStatFile`. |     |
+| `-x 2` | Only execute Phase Two. Requires temporary files and `binStatFile`. No `input` allowed. |     |
 | `-x b` | Do not remove `binStatFile`. |     |
 | `-x h` | Create a histogram of k-mers in a human readable format in output directory. |     |
 
