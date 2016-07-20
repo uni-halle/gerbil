@@ -13,24 +13,21 @@ Gerbil is developed and tested at Linux operating systems. Migrating it to other
 
 1. Install 3rd-party libraries and neccessary software:
 
-        sudo apt-get install git g++ libboost-all-dev libz3-dev
+        sudo apt-get install git cmake g++ libboost-all-dev libz3-dev
 
 2. Download the Source Files. 
 
         git clone https://github.com/uni-halle/gerbil.git
+        
+3. Compile the Sources. Gerbil comes with a CMake that shold work for various operating systems. CMake will automatically detect whether all mandatory and optional libraries are available at your system.
+
         cd gerbil
-        
-3. Compile the Sources. Gerbil comes with a Makefile, that has been pre-configured to work in most cases. 
-  
-  a) To compile gerbil with CUDA support, run
-        
+        mkdir build
+        cd build
+        cmake ..
         make
-  
-  b) At systems without CUDA-capable GPU's, Gerbil can be used without CUDA support:
 
-        make GPU=false
-
-Problems while compiling the code are possible due to different locations of libraries or the `nvcc` Compiler. In these cases, you have to modify the first few lines of the Makefile.
+The `build` directory should now contain a binary `Gerbil`.
 
 ## Usage
 
