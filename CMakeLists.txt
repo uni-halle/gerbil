@@ -35,8 +35,8 @@ find_package (Boost COMPONENTS REQUIRED system thread filesystem regex)
 find_package (BZip2 REQUIRED)
 find_package (ZLIB REQUIRED)
 
-set(MANDATORY_LIBS  ${Boost_LIBRARIES} bz2 ${ZLIB_LIBRARIES})
 set(MANDATORY_INCLUDES ${Boost_INCLUDE_DIRS} ${BZip2_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS})
+set(MANDATORY_LIBS  ${Boost_LIBRARIES} ${BZIP2_LIBRARIES} ${ZLIB_LIBRARIES})
 
 # import optional libraries
 find_package(CUDA)
@@ -67,3 +67,4 @@ target_link_libraries (Gerbil ${MANDATORY_LIBS} ${EXTRA_LIBS})
 
 # install binary
 install (TARGETS Gerbil DESTINATION bin)
+
