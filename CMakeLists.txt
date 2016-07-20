@@ -34,14 +34,16 @@ set(SOURCE_FILES_CUDA
 find_package (Boost COMPONENTS REQUIRED system thread filesystem regex)
 find_package (BZip2 REQUIRED)
 find_package (ZLIB REQUIRED)
+
 set(MANDATORY_LIBS  ${Boost_LIBRARIES} bz2 ${ZLIB_LIBRARIES})
+set(MANDATORY_INCLUDES ${Boost_INCLUDE_DIRS} ${BZip2_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS})
 
 # import optional libraries
 find_package(CUDA)
 if(CUDA_FOUND)
     set(GPU 1)                                              # set GPU flag to true in config file
     set(CUDA_PROPAGATE_HOST_FLAGS OFF)                      # turn off flag propagation
-    include_directories(${CUDA_INCLUDE_DIRS})               # use cuda headers
+    set(EXTRA_INCLUDES ${CUDA_INCLUDE_DIRS})                # use cuda headers
     set (EXTRA_LIBS ${EXTRA_LIBS} ${CUDA_LIBRARIES})        # use cuda libraries
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}                  # set nvcc compile flags
             -D_FORCE_INLINES -std=c++11 -O3)
@@ -53,6 +55,9 @@ configure_file (
         "${PROJECT_SOURCE_DIR}/include/gerbil/config.h.in"
         "${PROJECT_SOURCE_DIR}/include/gerbil/config.h"
 )
+
+# include headers
+include_directories(${MANDATORY_INCLUDES} ${EXTRA_INCLUDES})
 
 # build executable
 add_executable(Gerbil ${SOURCE_FILES_CPP} ${cuda_objs})
