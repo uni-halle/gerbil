@@ -97,11 +97,11 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 			checkSystem();
 			exit(0);
 		case 'v':
-			std::cout << VERSION << std::endl;
+			std::cout << VERSION_MAJOR << "." << VERSION_MINOR << std::endl;
 			exit(0);
 		case 'h':
 			printf("_________________________________________________________________\n");
-			printf("Gerbil version %s\n", VERSION);
+			printf("Gerbil version %i.%i\n", VERSION_MAJOR, VERSION_MINOR);
 			printf("-----------------------------------------------------------------\n");
 			printf("usage: gerbil [<option>|<flag>]* <input> <temp> <output>\n");
 			printf("<option>:\n");
@@ -687,7 +687,7 @@ void gerbil::Application::checkParams() {
 
 void gerbil::Application::printParamsInfo() {
 	printf("______________________________________________\n");
-	printf("Gerbil version %s\n", VERSION);
+	printf("Gerbil version %i.%i\n", VERSION_MAJOR, VERSION_MINOR);
 	printf("================= PARAMETERS =================\n");
 	printf("size of k-mers          : %5u\n", _k);
 	printf("size of minimizers      : %5u\n", _m);

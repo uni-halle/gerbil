@@ -68,6 +68,7 @@ template<unsigned K>
 void FailureBuffer<K>::storeCurrentBundleToDisk() {
 	if(_fileState == fs_close) {
 		_file = fopen (_filePath.c_str() , "wb+" );
+		setbuf(_file, NULL);
 		_fileState = fs_wom;
 	}
 	assert(_fileState == fs_wom);
@@ -83,6 +84,7 @@ bool FailureBuffer<K>::loadCurrentBundleFromDisk() {
 	if(_fileState == fs_wom) {
 		fclose(_file);
 		_file = fopen (_filePath.c_str() , "rb" );
+		setbuf(_file, NULL);
 		_fileState = fs_rom;
 	}
 	assert(_fileState == fs_rom);
@@ -219,6 +221,7 @@ void FailureBuffer<K>::storeCurrentBundleToDisk() {
 	//printf("-------store to disk\n");
 	if(_fileState == fs_close) {
 		_file = fopen (_filePath.c_str() , "wb+" );
+		setbuf(_file, NULL);
 		_fileState = fs_wom;
 	}
 	assert(_fileState == fs_wom);
@@ -235,6 +238,7 @@ bool FailureBuffer<K>::loadCurrentBundleFromDisk() {
 	if(_fileState == fs_wom) {
 		fclose(_file);
 		_file = fopen (_filePath.c_str() , "rb" );
+		setbuf(_file, NULL);
 		_fileState = fs_rom;
 	}
 	assert(_fileState == fs_rom);

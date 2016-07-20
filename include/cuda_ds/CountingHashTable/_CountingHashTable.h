@@ -127,8 +127,8 @@ protected:
 		uint64_t freeMem, totalMem;
 		cudaMemGetInfo(&freeMem, &totalMem);
 
-		// allocate memory 90% of the memory
-		size = 0.9 * freeMem;
+		// allocate memory 75% of the memory
+		size = 0.75 * freeMem;
 
 		// hash table
 		cudaError_t err;
