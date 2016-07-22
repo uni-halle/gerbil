@@ -8,6 +8,36 @@ set (Gerbil_VERSION_MINOR 2)
 # Compile Flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
 
+# Include Files
+set(HEADER_FILES
+        include/gerbil/Application.h
+        include/gerbil/Bundle.h
+        include/gerbil/CpuHasher.h
+        include/gerbil/debug.h
+        include/gerbil/FailureBuffer.h
+        include/gerbil/FastFile.h
+        include/gerbil/FastParser.h
+        include/gerbil/FastReader.h
+        include/gerbil/GpuHasher.h
+        include/gerbil/KmcWriter.h
+        include/gerbil/KMer.h
+        include/gerbil/KmerCountingHashTable.h
+        include/gerbil/KmerDistributer.h
+        include/gerbil/KmerHasher.h
+        include/gerbil/SequenceSplitter.h
+        include/gerbil/SuperReader.h
+        include/gerbil/SuperWriter.h
+        include/gerbil/SyncQueue.h
+        include/gerbil/TempFile.h
+        include/gerbil/TempFileStatistic.h
+        include/gerbil/ThreadBarrier.h
+        include/gerbil/types.h
+        include/cuda_ds/CountingHashTable.h
+        include/cuda_ds/CountingHashTable/_CountingHashTable.h
+        include/cuda_ds/CountingHashTable/_Key.h
+        include/cuda_ds/CountingHashTable/_KeyValuePair.h
+        )
+
 # Source Files
 set(SOURCE_FILES_CPP
         src/gerbil/Application.cpp
@@ -60,7 +90,7 @@ configure_file (
 include_directories(${MANDATORY_INCLUDES} ${EXTRA_INCLUDES})
 
 # build executable
-add_executable(Gerbil ${SOURCE_FILES_CPP} ${cuda_objs})
+add_executable(Gerbil ${HEADER_FILES} ${SOURCE_FILES_CPP} ${cuda_objs})
 
 # link against external libraries
 target_link_libraries (Gerbil ${MANDATORY_LIBS} ${EXTRA_LIBS})
