@@ -3,7 +3,7 @@
 A basic task in bioinformatics is the counting of k-mers in
 genome strings. The k-mer counting problem is to build a histogram of
 all substrings of length k in a given genome sequence. 
-Gerbil is a k-mer counter that is specialized for high effiency when counting k-mers for large k.
+Gerbil is a k-mer counter that is specialized for high effiency when counting k-mers for large k. For a comprehensive description see our [arxiv](http://arxiv.org/abs/1607.06618) article.
 
 Developed by: Marius Erbert, Steffen Rechner, Martin Luther University Halle-Wittenberg
 
