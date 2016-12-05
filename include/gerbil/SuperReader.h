@@ -25,6 +25,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "Bundle.h"
 #include "SyncQueue.h"
 #include "TempFile.h"
+#include "KmerDistributer.h"
 
 namespace gerbil {
 
@@ -39,6 +40,8 @@ class SuperReader {
 	uint_tfn* _tempFilesOrder;						// processing order of temporary files
 
 	std::thread* _processThread;					// process thread
+
+	KmerDistributer* _distributor;
 	
 	/*
 	 * starts the working process of a single thread
@@ -52,7 +55,12 @@ public:
 	/*
 	 * constructor
 	 */
-	SuperReader(const uint32 &superBundlesNumber, TempFile* tempFiles, const uint_tfn& tempFilesNumber);
+	SuperReader(
+			const uint32 &superBundlesNumber,
+			TempFile* tempFiles,
+			const uint_tfn& tempFilesNumber,
+			KmerDistributer* distributor
+	);
 
     /*
      * starts the entire working process

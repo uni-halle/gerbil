@@ -27,7 +27,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace cuda_ds {
 namespace internal {
 
-/**
+#define C_0  453569
+#define C_1  5696063
+
+
+		/**
  * A generic key class that size can be controlled by the template parameter.
  * @param intsPerKey The number of ints per key.
  */
@@ -42,18 +46,16 @@ public:
 	/**
 	 * Hash function based on byte-wise interpretation of the data
 	 */
-	__device__ uint32_t hash(const uint32_t trial) const {
+	__device__ uint64_t hash(const uint32_t trial) const {
 
-		// interpret data as bytes
-		uint8_t* keyBytes = (uint8_t*) &data;
+		// interpret data as uint16_t
+		uint16_t* bytes = (uint16_t*) &data;
 
-		uint32_t h1 = 0;
-		uint32_t h2 = 0;
-		for (uint32_t i = 0; i < intsPerKey * 4; i++) {
-			h1 = 31 * h1 + keyBytes[i];
-			h2 = 37 * h2 + ~keyBytes[i];
+		uint64_t h1 = 0;
+		for (uint32_t i = 0; i < intsPerKey * 2; i++) {
+			h1 += C_0 * h1 + bytes[i];
 		}
-		return h1 + trial * h2;
+		return h1 + C_1 * trial * trial;
 	}
 
 	/**

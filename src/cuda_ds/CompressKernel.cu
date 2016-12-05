@@ -12,8 +12,8 @@ namespace internal {
  * Determines the first free position i in the hash table with i >= l.
  */
 template<uint32_t intsPerKey, uint32_t blocksize>
-__device__  inline uint32_t firstFreePosition(KeyValuePair<intsPerKey>* table, const uint32_t numEntries,
-		const uint32_t l, const uint32_t r, uint32_t* shared) {
+__device__  inline uint64_t firstFreePosition(KeyValuePair<intsPerKey>* table, const uint64_t numEntries,
+		const uint64_t l, const uint64_t r, uint32_t* shared) {
 
 	const uint32_t intsPerEntry = intsPerKey + 1;
 	const uint32_t entriesPerBlock = blocksize / intsPerEntry;
@@ -22,16 +22,16 @@ __device__  inline uint32_t firstFreePosition(KeyValuePair<intsPerKey>* table, c
 	// Shared Memory and views on it.
 	// This is the same physical memory as defined in compressKernel!
 	uint32_t* leftPart = &shared[0];
-	volatile uint32_t *result = &shared[2 * blocksize];
+	volatile uint64_t *result = (volatile uint64_t*) &shared[2 * blocksize];
 
 	if (tId == 0)
-		*result = (uint32_t) -1;
+		*result = (uint64_t) -1;
 	__syncthreads();
 
-	uint32_t i = l;
+	uint64_t i = l;
 	while (i < r) {
 
-		uint32_t j = i % entriesPerBlock;
+		uint64_t j = i % entriesPerBlock;
 
 		if(j == 0) {
 
@@ -47,8 +47,7 @@ __device__  inline uint32_t firstFreePosition(KeyValuePair<intsPerKey>* table, c
 		}
 
 		// linear scan of the part of the hash table
-		for (; j < entriesPerBlock && i < r && (*result) == (uint32_t) -1;
-				j++, i++) {
+		for (; j < entriesPerBlock && i < r && (*result) == (uint64_t) -1; j++, i++) {
 			// only one thread participates
 			if (tId == 0) {
 				// the first free position is returned
@@ -58,7 +57,7 @@ __device__  inline uint32_t firstFreePosition(KeyValuePair<intsPerKey>* table, c
 			__syncthreads();
 		}
 
-		if (*result != (uint32_t) -1)
+		if (*result != (uint64_t) -1)
 			return *result;
 	}
 
@@ -70,8 +69,8 @@ __device__  inline uint32_t firstFreePosition(KeyValuePair<intsPerKey>* table, c
  * Determines the last free position i in the hash table with i <= r.
  */
 template<uint32_t intsPerKey, uint32_t blocksize>
-__device__  inline uint32_t lastOccupiedPosition(KeyValuePair<intsPerKey>* table, const uint32_t numEntries, const uint32_t l,
-		const uint32_t r, uint32_t* shared) {
+__device__  inline uint64_t lastOccupiedPosition(KeyValuePair<intsPerKey>* table, const uint64_t numEntries, const uint64_t l,
+		const uint64_t r, uint32_t* shared) {
 
 	const uint32_t intsPerEntry = intsPerKey + 1;
 	const uint32_t entriesPerBlock = blocksize / intsPerEntry;
@@ -79,23 +78,23 @@ __device__  inline uint32_t lastOccupiedPosition(KeyValuePair<intsPerKey>* table
 
 	// Views on the shared memory
 	volatile uint32_t* rightPart = &shared[blocksize];
-	volatile uint32_t *result = &shared[2 * blocksize + 1];
+	volatile uint64_t *result = (volatile uint64_t*) &shared[2 * blocksize + 3];
 
 	if (tId == 0)
-		*result = (uint32_t) -1;
+		*result = (uint64_t) -1;
 	__syncthreads();
 
 	// the position from the end of the table
-	uint32_t i = numEntries - r - 1;
+	uint64_t i = numEntries - r - 1;
 
 	// Run to front
 	while (numEntries-i-1 > l) {
 
-		uint32_t j = i % entriesPerBlock;
+		uint64_t j = i % entriesPerBlock;
 
 		if(j == 0) {
 
-			const uint32_t numEntriesLoaded = min(entriesPerBlock, numEntries-i);
+			const uint64_t numEntriesLoaded = min((uint64_t) entriesPerBlock, numEntries-i);
 			const uint32_t* startAddr = (uint32_t*) (table + numEntries - i - numEntriesLoaded);
 			const uint32_t* stopAddr = (uint32_t*) (table + numEntries - i);
 			const uint32_t* addr = (uint32_t*) (table + numEntries - i - entriesPerBlock) + tId;
@@ -109,8 +108,7 @@ __device__  inline uint32_t lastOccupiedPosition(KeyValuePair<intsPerKey>* table
 		}
 
 		// linear scan of the part of the hash table
-		for (; j < entriesPerBlock && numEntries-i-1 > l && *result == (uint32_t) -1;
-				j++, i++) {
+		for (; j < entriesPerBlock && numEntries-i-1 > l && *result == (uint64_t) -1; j++, i++) {
 			// only one thread participates
 			if (tId == 0) {
 				// the last occupied position is returned
@@ -120,7 +118,7 @@ __device__  inline uint32_t lastOccupiedPosition(KeyValuePair<intsPerKey>* table
 			__syncthreads();
 		}
 
-		if (*result != (uint32_t) -1) {
+		if (*result != (uint64_t) -1) {
 			//printf("r is %u\n", *result);
 			return *result;
 		}
@@ -131,8 +129,8 @@ __device__  inline uint32_t lastOccupiedPosition(KeyValuePair<intsPerKey>* table
 }
 
 template<uint32_t intsPerKey, uint32_t blocksize>
-__device__ inline void my_swap(KeyValuePair<intsPerKey>* table, const uint32_t numEntries,
-		const uint32_t l, const uint32_t r, uint32_t* shared) {
+__device__ inline void my_swap(KeyValuePair<intsPerKey>* table, const uint64_t numEntries,
+		const uint64_t l, const uint64_t r, uint32_t* shared) {
 
 	const uint32_t tId = threadIdx.x;
 	const uint32_t intsPerEntry = intsPerKey + 1;
@@ -149,11 +147,10 @@ __device__ inline void my_swap(KeyValuePair<intsPerKey>* table, const uint32_t n
 	if (tId < intsPerEntry) {
 
 		// swap in global memory
-		const uint32_t x = numEntries - r - 1;
-		const uint32_t pos = entriesPerBlock - (x % entriesPerBlock) - 1;
+		const uint64_t x = numEntries - r - 1;
+		const uint64_t pos = entriesPerBlock - (x % entriesPerBlock) - 1;
 		tableInts[intsPerEntry * l + tId] = rightPart[pos * intsPerEntry + tId];
-		tableInts[intsPerEntry * r + tId] = leftPart[(l % entriesPerBlock) * intsPerEntry
-						+ tId];
+		tableInts[intsPerEntry * r + tId] = leftPart[(l % entriesPerBlock) * intsPerEntry + tId];
 	}
 	__syncthreads();
 
@@ -165,14 +162,14 @@ __device__ inline void my_swap(KeyValuePair<intsPerKey>* table, const uint32_t n
  */
 template<uint32_t intsPerKey, uint32_t blocksize>
 __global__ void compressKernel(KeyValuePair<intsPerKey>* table,
-		const uint32_t numEntries, uint32_t* res) {
+		const uint64_t numEntries, uint64_t* res) {
 
 	// prepare shared memory to hold parts of the hash table containing l and r
-	__shared__ uint32_t shared[2 * blocksize + 2];
+	__shared__ uint32_t shared[2 * blocksize + 4];
 
 	// init left and right marker
-	uint32_t l = firstFreePosition<intsPerKey, blocksize>(table, numEntries, 0, numEntries - 1, shared);	// l points to first zero position
-	uint32_t r = lastOccupiedPosition<intsPerKey, blocksize>(table, numEntries, 0, numEntries - 1, shared);	// r points to last nonzero position
+	uint64_t l = firstFreePosition<intsPerKey, blocksize>(table, numEntries, 0, numEntries - 1, shared);	// l points to first zero position
+	uint64_t r = lastOccupiedPosition<intsPerKey, blocksize>(table, numEntries, 0, numEntries - 1, shared);	// r points to last nonzero position
 
 	/* invariant:
 	 *   l points to first zero position.
@@ -181,7 +178,7 @@ __global__ void compressKernel(KeyValuePair<intsPerKey>* table,
 
 	while (l < r) {
 
-		//printf("l=%u, r=%u\n", l, r);
+		printf("l=%u, r=%u\n", l, r);
 
 		// swap table[l] with table[r])
 		my_swap<intsPerKey, blocksize>(table, numEntries, l, r, shared);
@@ -191,27 +188,39 @@ __global__ void compressKernel(KeyValuePair<intsPerKey>* table,
 		r = lastOccupiedPosition<intsPerKey, blocksize>(table, numEntries, l, r-1, shared);
 	}
 
-	//printf("l=%u, r=%u\n", l, r);
+	printf("l=%u, r=%u\n", l, r);
 
 	*res = l;
 }
 
 template<uint32_t intsPerKey>
-void _compress(KeyValuePair<intsPerKey>* table, const uint32_t numEntries,
-		uint32_t* result) {
+uint64_t _compress(KeyValuePair<intsPerKey>* table, const uint64_t numEntries,
+		uint64_t* result) {
 
 	const uint32_t blocksize = 1024;
 
 	// launch kernel
-	compressKernel<intsPerKey, blocksize> <<<1, blocksize>>>(table, numEntries,
-			result);
+	compressKernel<intsPerKey, blocksize> <<<1, blocksize>>>(table, numEntries, result);
+	auto err = cudaGetLastError();
+	if(err != cudaSuccess) {
+		throw std::runtime_error(
+				std::string(
+						std::string("cuda_ds::compress::exception1: ")
+						+ cudaGetErrorName(err)) + std::string(": ")
+				+ std::string(cudaGetErrorString(err)));
+	}
+
+	uint64_t res;
+	cudaMemcpy(&res, result, sizeof(uint64_t), cudaMemcpyDeviceToHost);
+
+	return res;
 }
 
 /**
  * Export Templates for meaningful ints per key.
  */
 #define EXPORT(x) 																\
-	template void _compress<x>(KeyValuePair<x>*, const uint32_t, uint32_t*);
+	template uint64_t _compress<x>(KeyValuePair<x>*, const uint64_t, uint64_t*);
 
 EXPORT(1)
 EXPORT(2)

@@ -36,6 +36,9 @@ gerbil::Application::Application() :
 }
 
 gerbil::Application::~Application() {
+#ifdef GPU
+	cudaDeviceReset();
+#endif
 }
 
 void gerbil::Application::parseParams(const int &argc, char** argv) {
@@ -86,12 +89,19 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 			}
 			break;
 #ifdef GPU
-		case 'g':
+		case 'g': {
 			// determine number of gpus to use
 			int num;
-			cudaGetDeviceCount(&num);
-			_numGPUs = std::min(num, 8);
+			auto err = cudaGetDeviceCount(&num);
+			if (err != cudaSuccess) {
+				std::cerr << "Error while searching for GPU's: " << cudaGetErrorString(err) << std::endl;
+				std::cerr << "Disabling GPU support." << std::endl;
+				_numGPUs = 0;
+			} else {
+				_numGPUs = (uint8_t) std::min(num, 2);
+			}
 			break;
+		}
 #endif
 		case 's':
 			checkSystem();
@@ -257,13 +267,16 @@ void gerbil::Application::run2() {
 	distributeMemory2(&tempFileStatistic, superBundlesNumber, kmcBundlesNumber,
 			maxKmcHashtableSize, kMerBundlesNumber);
 
+	// init distributor
+	KmerDistributer distributor(hasherThreadsCPU, hasherThreadsGPU, _tempFilesNumber);
+
 	// init pipeline
-	SuperReader superReader(superBundlesNumber, _tempFiles, _tempFilesNumber);
+	SuperReader superReader(superBundlesNumber, _tempFiles, _tempFilesNumber, &distributor);
 	KmerHasher kmerHasher(_k, kmcBundlesNumber, superReader.getSuperBundleQueue(),
 			_superSplitterThreadsNumber, hasherThreadsCPU, hasherThreadsGPU,
 			_tempFiles, _tempFilesNumber, _thresholdMin, _norm, _tempFolderName,
 			maxKmcHashtableSize, kMerBundlesNumber,
-			superReader.getTempFilesOrder());
+			superReader.getTempFilesOrder(), &distributor);
 	KmcWriter kmcWriter(_kmcFileName, kmerHasher.getKmcSyncSwapQueue(), _k);
 
 	// start pipeline
@@ -580,15 +593,13 @@ void gerbil::Application::autocompleteParams() {
 	SET_DEFAULT(_sequenceSplitterThreadsNumber,
 			_threadsNumber <= 4 ? 2 : _threadsNumber - 3);
 
+#if false
+	SET_DEFAULT(_superSplitterThreadsNumber, 1 + (_threadsNumber - 1) * 4 / 10);
+	SET_DEFAULT(_hasherThreadsNumber, 1 + (_threadsNumber - 1) * 8 / 10);
+#endif
 
-	if(_numGPUs == 0) {
-		SET_DEFAULT(_superSplitterThreadsNumber, 1 + (_threadsNumber - 1) * 4 / 10);
-		SET_DEFAULT(_hasherThreadsNumber, 1 + (_threadsNumber - 1) * 8 / 10);
-	}
-	else {
-		SET_DEFAULT(_superSplitterThreadsNumber, 1 + (_threadsNumber - 1) * 8 / 10);
-		SET_DEFAULT(_hasherThreadsNumber, 1 + (_threadsNumber - 1) * 6 / 10);
-	}
+	SET_DEFAULT(_superSplitterThreadsNumber, 1 + (_threadsNumber - 1) * 5 / 10);
+	SET_DEFAULT(_hasherThreadsNumber, _numGPUs + 1 + (_threadsNumber - 1) * 6 / 10);
 	
 	SET_DEFAULT(_tempFilesNumber, DEF_TEMPFILES_NUMBER);
 	SET_DEFAULT(_thresholdMin, DEF_THRESHOLD_MIN);

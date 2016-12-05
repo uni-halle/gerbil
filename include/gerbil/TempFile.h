@@ -26,72 +26,102 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace gerbil {
 
-class TempFile {
-	static uint_tfn __nextId;		// guaranteed unique ids
+	class TempFile {
+		static uint_tfn __nextId;       // guaranteed unique ids
 
-	uint_tfn _id;					// id of bin file
+		uint_tfn _id;                   // id of bin file
 
-	std::string _filename;			// filename
-	FILE* _file;					// file
-	uint64 _size;					// total size of file
-	uint64 _filled;					// in fact required size of file
+		std::string _filename;          // filename
+		FILE *_file;                    // file
+		uint64 _size;                   // total size of file
+		uint64 _filled;                 // in fact required size of file
 
-	uint64 _smers;					// number of s-mers
-	uint64 _kmers;					// number of k-mers
-	uint64 _ukmers;					// number of u-mers
+		uint64 _smers;                  // number of s-mers
+		uint64 _kmers;                  // number of k-mers
+		uint64 _ukmers;                 // number of u-mers
 
-public:
+		uint64 _numberOfRuns;           // number of runs
 
-	TempFile();
-	void loadStats(std::string path, FILE* file);
-	~TempFile();
+	public:
 
-	bool openW(const std::string filename);
-	bool openR();
+		TempFile();
 
-	bool write(SuperBundle* superBundle);
-	bool write(char* data, const uint64& size, const uint64& smers, const uint64& kmers, const uint64& filled);
-	bool read(SuperBundle* superBundle);
+		void loadStats(std::string path, FILE *file);
 
-	uint64 approximateUniqueKmers(const double ratio) const;
-	const uint64& getKMersNumber() const;
-	const uint64& getSMersNumber() const;
-	const uint64& getUKMersNumber() const;
-	const uint64& getSize() const;
+		~TempFile();
 
-	void incUKMersNumber(const uint64 &v);
+		bool openW(const std::string filename);
 
-	bool isEmpty();
+		bool openR();
 
-	bool remove();
-	void close();
+		bool write(SuperBundle *superBundle);
 
-	void fprintStat(FILE* file) const;
-};
+		bool write(char *data, const uint64 &size, const uint64 &smers, const uint64 &kmers, const uint64 &filled);
 
-inline uint64 TempFile::approximateUniqueKmers(const double ratio) const{
-	return _kmers * ratio;
-}
+		bool read(SuperBundle *superBundle);
 
-inline const uint64& TempFile::getKMersNumber() const{
-	return _kmers;
-}
+		uint64 approximateUniqueKmers(const double ratio) const;
 
-inline const uint64& TempFile::getSMersNumber() const{
-	return _smers;
-}
+		const uint64 &getKMersNumber() const;
 
-inline const uint64& TempFile::getUKMersNumber() const{
-	return _ukmers;
-}
+		const uint64 &getSMersNumber() const;
 
-inline const uint64& TempFile::getSize() const{
-	return _size;
-}
+		const uint64 &getUKMersNumber() const;
 
-inline void TempFile::incUKMersNumber(const uint64 &v) {
-	__sync_add_and_fetch(&_ukmers, v);
-}
+		const uint64 &getSize() const;
+
+		inline const void calcNumberOfRuns(const double ratio, const uint64 maxUkmers);
+		inline const void initNumberOfRuns() { _numberOfRuns = 1; }
+
+		const uint64 &getNumberOfRuns() const;
+
+		void incUKMersNumber(const uint64 &v);
+
+		bool isEmpty();
+
+		bool remove();
+
+		void reset();
+
+		void close();
+
+		void fprintStat(FILE *file) const;
+	};
+
+	inline uint64 TempFile::approximateUniqueKmers(const double ratio) const {
+		return _kmers * ratio;
+	}
+
+	inline const uint64 &TempFile::getKMersNumber() const {
+		return _kmers;
+	}
+
+	inline const uint64 &TempFile::getSMersNumber() const {
+		return _smers;
+	}
+
+	inline const uint64 &TempFile::getUKMersNumber() const {
+		return _ukmers;
+	}
+
+	inline const uint64 &TempFile::getSize() const {
+		return _size;
+	}
+
+	inline const uint64 &TempFile::getNumberOfRuns() const {
+		return _numberOfRuns;
+	}
+
+	inline const void TempFile::calcNumberOfRuns(const double ratio, const uint64 maxUkmers) {
+		uint64 x = approximateUniqueKmers(ratio);
+		//_numberOfRuns = 1;
+		_numberOfRuns = (x / (maxUkmers + 1)) + 1;
+		//printf("calcNumberOfRuns: ratio=%f  maxUkMers= %lu  approximateUniqueKmers=%lu  _numberOfRuns=%lu\n", ratio, maxUkmers, x, _numberOfRuns);
+	}
+
+	inline void TempFile::incUKMersNumber(const uint64 &v) {
+		__sync_add_and_fetch(&_ukmers, v);
+	}
 
 }
 

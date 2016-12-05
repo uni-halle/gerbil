@@ -85,7 +85,7 @@ public:
 					0), _btUKMersNumber(0) {
 
 		_threads = new std::thread*[_numThreads];
-		
+
 		for(uint i(0); i < HISTOGRAM_SIZE; ++i)
 			_histogram[i].store(0);
 
@@ -97,7 +97,7 @@ public:
 			tables[i] = new KmerCountingHashTable<K>(i, _kmcSyncSwapQueue,
 					_thresholdMin, _tempPath);
 			// report capacities to kmer distributor
-			distributor->updateCapacity(true, i, tables[i]->getMaxCapacity());
+			distributor->updateCapacity(true, i, (const uint64_t) (tables[i]->getMaxCapacity() * FILL_GPU));
 		}
 #endif
 	}
@@ -141,8 +141,10 @@ public:
 						KmerCountingHashTable<K>* table = tables[devID];
 
 						gpu::KMerBundle<K>* kmb = new gpu::KMerBundle<K>;// Working KMer Bundle
-						uint32_t curTempFileId = -1;// current file id
-						uint64_t binKMers = 0;// number of kmers inserted by this hasher
+						uint_tfn curTempFileId = (uint_tfn) -1;    // current file id
+						uint_tfn curTempFileRun = (uint_tfn) -1;   // current run through temp file
+						uint64_t binKMers = 0;  // number of kmers inserted by this hasher
+						uint64_t binUKMers = 0; // number of processed ukmers of this hasher thread
 
 						// for time measurement
 						typedef std::chrono::microseconds ms;
@@ -152,17 +154,18 @@ public:
 						// extract kmer bundles from queue until queue is empty
 						while (kMerQueue->swapPop(kmb)) {
 
-							// if the kmer bundle does not belong the the current file
-							if(curTempFileId != kmb->getTempFileId()) {
+							// if the kmer bundle does not belong the the current file or the current run
+							if(curTempFileId != kmb->getTempFileId() || curTempFileRun != kmb->getTempFileRun()) {
 
 								// Extract kmer counts from table
 								start = std::chrono::steady_clock::now();
-								table->extractAndClear();
+								table->extract();
 								stop = std::chrono::steady_clock::now();
 
 								// measure time since last extraction and  determine throughput
 								duration += std::chrono::duration_cast<ms>(stop-start);
 								uint64_t processedKMers = table->getKMersNumber() - binKMers;
+								uint64_t processedUKMers = table->getUKMersNumber() - binUKMers;
 
 								// report throughput to the kmer distributor
 								float throughput = duration.count() != 0 ? processedKMers / duration.count() : 0;
@@ -170,17 +173,26 @@ public:
 
 								// update new file id
 								curTempFileId = kmb->getTempFileId();
+								curTempFileRun = kmb->getTempFileRun();
 
 								// request new ratio of kmers and determine expected number of distinct kmers
-								float ratio = distributor->getSplitRatio(true, devID, curTempFileId);
-								uint64_t newSize = _tempFiles[curTempFileId].approximateUniqueKmers(0.9) * ratio;
+								double mySplitRatio = distributor->getSplitRatio(true, devID, curTempFileId);
+								double ukmerKmerRatio = processedKMers ? (double) processedUKMers / (double) processedKMers : START_RATIO;
+								uint64_t approxUkMers = _tempFiles[curTempFileId].approximateUniqueKmers(ukmerKmerRatio);
+								uint64_t numRuns = _tempFiles[curTempFileId].getNumberOfRuns();
+								uint64_t newSize = (uint64_t) (approxUkMers * mySplitRatio / ((double) numRuns * FILL_GPU));
+
+                                //printf("gpu thread %i: throughput =%f myRatio=%f\n", devID, throughput, mySplitRatio);
 
 								// resize the hash table
-								table->init(newSize);
+                                start = std::chrono::steady_clock::now();
+                                table->init(newSize);
+								stop = std::chrono::steady_clock::now();
 
 								// reset timer and kmer counter
-								binKMers = table->getKMersNumber();
-								duration = ms(0);
+								duration = std::chrono::duration_cast<ms>(stop-start);
+                                binKMers = table->getKMersNumber();
+								binUKMers = table->getUKMersNumber();
 							}
 
 							// insert bundle into table
@@ -188,11 +200,11 @@ public:
 							table->addBundle(kmb);
 							stop = std::chrono::steady_clock::now();
 							duration += std::chrono::duration_cast<ms>(stop-start);
-						};
+						}
 
 						// After the queue is empty:
 						// Extract kmer counts from table (a last time)
-						table->extractAndClear();
+						table->extract();
 
 						_kMersNumber += table->getKMersNumber();
 						_uKMersNumber += table->getUKMersNumber();
@@ -221,10 +233,6 @@ public:
 			_threads[i]->join();
 			delete _threads[i];
 		}
-	}
-
-	void test() {
-
 	}
 
 	inline uint64_t getKMersNumber() const {

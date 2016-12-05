@@ -69,7 +69,7 @@ public:
 	 *         number of keys safely. In this case, no keys are
 	 *         insert. An extract is required.
 	 */
-	bool insert(const KeyType* keyBundle, const uint32_t numKeys) {
+	bool insert(const KeyType* keyBundle, const uint64_t numKeys) {
 
 		// cast to internal Key type and call internal add
 		return this->add(
@@ -101,7 +101,7 @@ public:
 		//uint32_t numDifferentKeys = this->compressEntries();
 		//printf("keys in hash table: %u\n", numDifferentKeys);
 		// Load table to host memory in small chunks
-		uint32_t itemsPerBuffer =
+		uint64_t itemsPerBuffer =
 				countBufferSize
 						/ sizeof(internal::KeyValuePair<
 								internal::intsPerKey<KeyType>()>);
@@ -110,7 +110,7 @@ public:
 
 		for (uint32_t i = 0; i * itemsPerBuffer < this->getNumEntries(); i++) {
 
-			uint32_t itemsToFetch =
+			uint64_t itemsToFetch =
 					(i + 1) * itemsPerBuffer < this->getNumEntries() ?
 							itemsPerBuffer :
 							this->getNumEntries() % itemsPerBuffer;
@@ -135,14 +135,13 @@ public:
 		delete[] hostTable;
 
 		// Determine if there are any unsuccessfully inserted kmers
-		uint32_t numNoSuccess;
-		cudaMemcpy(&numNoSuccess, this->numNoSuccessPtr, sizeof(uint32_t),
+		uint64_t numNoSuccess;
+		cudaMemcpy(&numNoSuccess, this->numNoSuccessPtr, sizeof(uint64_t),
 				cudaMemcpyDeviceToHost);
 
-		// better assure that maxNumNoSuccess has not been reached
-		numNoSuccess = min(numNoSuccess, this->maxNumNoSuccess);
-
 		printf("keys in free area: %u\n", numNoSuccess);
+
+		assert(numNoSuccess <= this->maxNumNoSuccess);
 
 		// if there are some
 		if (numNoSuccess > 0) {

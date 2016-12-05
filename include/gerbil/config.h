@@ -23,13 +23,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define CONFIG_H_
 
 #include <assert.h>
+#include <climits>
 
 namespace gerbil {
 
-#define VERSION_MAJOR @Gerbil_VERSION_MAJOR@
-#define VERSION_MINOR @Gerbil_VERSION_MINOR@
-
-#cmakedefine GPU
+#define VERSION_MAJOR 1
+#define VERSION_MINOR 0
 
 //#define DEB
 //#define DEV
@@ -48,8 +47,6 @@ namespace gerbil {
 	#undef DEB
 	#undef DEV
 	#define IF_REL(x) x
-	//disable asserts
-	#define NDEBUG
 #endif
 
 #ifdef DEV
@@ -81,6 +78,8 @@ namespace gerbil {
 
 
 #define FILL 0.4
+#define FILL_MAX 0.8
+#define FILL_GPU 0.5
 #define START_RATIO FILL
 
 #define HISTOGRAM_SIZE 512
@@ -89,7 +88,6 @@ namespace gerbil {
 /*
  * default parameters
  */
-
 #define DEF_MINIMIZER_SIZE 7
 #define MIN_MINIMIZER_SIZE 5
 #define MAX_MINIMIZER_SIZE 9
@@ -160,6 +158,22 @@ namespace gerbil {
 #define GPU_COPY_BUFFER_SIZE			MB_TO_B( 16)
 
 #define MEM_KEY_HT	0.8
+
+#define NULL_BUCKET_VALUE UINT_MAX
+
+
+
+#define LOOP2(N, X) X(N - 1); X(N)
+#define LOOP4(N, X) LOOP2(N-2, X); LOOP2(N, X)
+#define LOOP8(N, X) LOOP4(N-4, X); LOOP4(N, X)
+#define LOOP16(N, X) LOOP8(N-8, X); LOOP8(N, X)
+#define LOOP32(N, X) LOOP16(N-16, X); LOOP16(N, X)
+#define LOOP64(N, X) LOOP32(N-32, X); LOOP32(N, X)
+#define LOOP128(N, X) LOOP64(N-64, X); LOOP64(N, X)
+#define LOOP256(N, X) LOOP128(N-128, X); LOOP128(N, X)
+#define LOOP512(N, X) LOOP256(N-256, X); LOOP256(N, X)
+
+
 
 }
 

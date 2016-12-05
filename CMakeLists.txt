@@ -1,12 +1,18 @@
 cmake_minimum_required(VERSION 2.8)
-project(Gerbil)
+project(gerbil)
 
 # The version number.
-set (Gerbil_VERSION_MAJOR 0)
-set (Gerbil_VERSION_MINOR 2)
+set(Gerbil_VERSION_MAJOR 0)
+set(Gerbil_VERSION_MINOR 2)
+
+# configure a header file to pass some of the CMake settings to the source code
+#configure_file(
+#        "${PROJECT_SOURCE_DIR}/include/gerbil/config.h.in"
+#        "${PROJECT_BINARY_DIR}/config.h"
+#)
 
 # Compile Flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # Include Files
 set(HEADER_FILES
@@ -61,40 +67,51 @@ set(SOURCE_FILES_CUDA
         )
 
 # import mandatory libraries
-find_package (Boost COMPONENTS REQUIRED system thread filesystem regex)
-find_package (BZip2 REQUIRED)
-find_package (ZLIB REQUIRED)
-
-set(MANDATORY_INCLUDES ${Boost_INCLUDE_DIRS} ${BZip2_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS})
-set(MANDATORY_LIBS  ${Boost_LIBRARIES} ${BZIP2_LIBRARIES} ${ZLIB_LIBRARIES})
-
-# import optional libraries
+find_package(Boost REQUIRED COMPONENTS system thread filesystem regex)
+find_package(BZip2 REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(Threads REQUIRED)
+find_package(OpenMP)
 find_package(CUDA)
-if(CUDA_FOUND)
-    set(GPU 1)                                              # set GPU flag to true in config file
-    set(CUDA_PROPAGATE_HOST_FLAGS OFF)                      # turn off flag propagation
-    set(EXTRA_INCLUDES ${CUDA_INCLUDE_DIRS})                # use cuda headers
-    set (EXTRA_LIBS ${EXTRA_LIBS} ${CUDA_LIBRARIES})        # use cuda libraries
-    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}                  # set nvcc compile flags
-            -D_FORCE_INLINES -std=c++11 -O3)
-    cuda_compile(cuda_objs ${SOURCE_FILES_CUDA})            # compile .cu sources
-endif(CUDA_FOUND)
 
-# configure a header file to pass some of the CMake settings to the source code
-configure_file (
-        "${PROJECT_SOURCE_DIR}/include/gerbil/config.h.in"
-        "${PROJECT_SOURCE_DIR}/include/gerbil/config.h"
+# Compile Flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+# set include directory (-I)
+include_directories(
+        #${PROJECT_BINARY_DIR}           # local build folder (where config.h is located)
+        ${Boost_INCLUDE_DIRS}
+        ${BZip2_INCLUDE_DIRS}
+        ${ZLIB_INCLUDE_DIRS}
+        ${CMAKE_THREAD_LIBS_INIT}
 )
 
-# include headers
-include_directories(${MANDATORY_INCLUDES} ${EXTRA_INCLUDES})
+# gather up libraries
+set(MY_LIBS
+        ${Boost_LIBRARIES}
+        ${BZIP2_LIBRARIES}
+        ${ZLIB_LIBRARIES})
+
+# if OpenMP was found
+if (OPENMP_FOUND)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif ()
+
+# if CUDA is located at the system
+if (CUDA_FOUND)
+    add_definitions(-DGPU)                                                   # enable CUDA flag
+    include_directories(${CUDA_INCLUDE_DIRS})
+    set(MY_LIBS ${MY_LIBS} ${CUDA_LIBRARIES})
+    cuda_compile(CUDA_OBJECTS ${SOURCE_FILES_CUDA})
+endif ()
 
 # build executable
-add_executable(Gerbil ${HEADER_FILES} ${SOURCE_FILES_CPP} ${cuda_objs})
+add_executable(gerbil ${HEADER_FILES} ${SOURCE_FILES_CPP} ${CUDA_OBJECTS})
 
 # link against external libraries
-target_link_libraries (Gerbil ${MANDATORY_LIBS} ${EXTRA_LIBS})
+target_link_libraries(gerbil ${MY_LIBS})
 
 # install binary
-install (TARGETS Gerbil DESTINATION bin)
+install(TARGETS gerbil DESTINATION bin)
 

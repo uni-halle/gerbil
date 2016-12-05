@@ -45,43 +45,70 @@ private:
 
 	// global statistic information
 	uint64_t *capacity;						// the maximal number of kmers for each hasher thread
-	float* throughput;						// the throughput of each hasher thread
+	double* throughput;						// the throughput of each hasher thread
 
 	// working memory
-	float *prefixSum;						// the prefix sums of the ratio field
-	float* tmp;								// working memory
+	double *prefixSum;						// the prefix sums of the ratio field
+	double* tmp;								// working memory
 	uint32_t lastFileId = -1;
 
 	// file-specific variables
 	std::vector<uint32_t*> buckets;			// distribution of kmers over the various hasher threads
 	std::vector<int> lock;					// whether or not the distribution for file i has beeen computed yet
-	std::vector<float*> ratio;				// a ratio between 0 and 1 for each hasher thread and file
+	std::vector<double*> ratio;				// a ratio between 0 and 1 for each hasher thread and file
+
+	uint64 _ukmerNumber;
+	uint64 _kmerNumber;
+	double _ukmerRatio;
+
+	std::atomic<uint> _totalCapacity;
+
+	bool _rdy = false;
 
 public:
 	KmerDistributer(const uint32_t numCPUHasherThreads,
 			const uint32_t numGPUHasherThreads, const uint32_t maxNumFiles);
 	virtual ~KmerDistributer();
 
+	inline const double& getUkmerRatio() const{ return _ukmerRatio; }
+	inline double getTotalCapacity() const{ return _totalCapacity; }
+
+	inline void setRdy(){ _rdy = true; }
+	inline void waitUntilRdy() const{
+		while(!_rdy)
+			usleep(10);
+	}
+
 	/**
 	 * Construct a kmer distribution for a new temporary file.
 	 */
-	void updateFileInformation(const uint32_t curFileId,
+	void updateFileInformation(const uint32_t curFileId, const uint32_t curRun, const uint32_t maxRunsPerFile,
 			const uint64_t kmersInFile);
 
 	/**
 	 * Updates the Throughput of a hasher thread.
 	 */
-	void updateThroughput(const bool gpu, const uint32_t tId, const float throughput);
+	void updateThroughput(const bool gpu, const uint32_t tId, const double throughput);
 
 	/**
 	 * Updates the kmer capacity of a hasher thread.
 	 */
 	void updateCapacity(const bool gpu, const uint32_t tId, const uint64_t cap);
 
+
+	void updateUKmerRatio(const bool gpu, const uint32_t tId, const uint64 binkmernumber, const uint64 binukmernumber) {
+		if(tId || gpu)
+			return;
+		_ukmerNumber += binukmernumber;
+		_kmerNumber += binkmernumber;
+		_ukmerRatio = _kmerNumber == 0 ? 0 : ((double)_ukmerNumber) / _kmerNumber;
+	//	std::cout << "ratio etc.: " << _ukmerNumber << "  " << _kmerNumber << "   " << _ukmerRatio << std::endl;
+	}
+
 	/**
 	 * Returns the ratio of each hasher thread for a certain file
 	 */
-	float getSplitRatio(const bool gpu, const uint32_t tId,
+	double getSplitRatio(const bool gpu, const uint32_t tId,
 			const uint_tfn curTempFileId) const;
 
 	/**
@@ -94,14 +121,16 @@ public:
 	uint32_t inline distributeKMer(const KMer<K>& kmer,
 			const uint32_t curFileId) const {
 
-	//	return numThreadsCPU;
+		//	return numThreadsCPU;
 
 		// wait until updates are complete
-		while (lock[curFileId])
+		/*while (lock[curFileId]) {
+			std::cout << "LOCK!!!" << std::endl;
 			usleep(10);
+		}*/
 
 		// Determine hash value of kmer by table lookup
-		const uint32_t hash = kmer.getPartHash() % BUCKETSIZE;
+		const uint64_t hash = kmer.getPartHash() % BUCKETSIZE;
 		//const uint32_t hash = kmer.getPartHash() & (BUCKETSIZE-1);
 		return buckets[curFileId][hash];
 	}

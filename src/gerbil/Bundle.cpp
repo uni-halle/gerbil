@@ -68,7 +68,7 @@ bool gerbil::ReadBundle::transfer(ReadBundle* readbundle) {
 	return true;
 }
 
-IF_DEB_DEV(
+//IF_DEB_DEV(
 	void gerbil::ReadBundle::print() {
 		uint32 rc= *readsCount;
 		printf("readsCount: %6d\n", rc);
@@ -88,7 +88,7 @@ IF_DEB_DEV(
 		}
 
 	}
-)
+//)
 
 gerbil::SuperBundle::SuperBundle() {
 	clear();
@@ -116,6 +116,7 @@ void gerbil::SuperBundle::clear() {
 	*data = 0;
 	_finalized = false;
 	tempFileId = TEMPFILEID_NONE;
+	tempFileRun = 0;
 
 	sMerNumber = 0;
 	kMerNumber = 0;

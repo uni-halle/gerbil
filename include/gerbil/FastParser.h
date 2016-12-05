@@ -38,7 +38,7 @@ private:
   uint64 _readsNumber;                        // number of reads
   SyncSwapQueueMPMC<ReadBundle> _syncQueue;   // SyncSwapQueue for ReadBundles
 
-  uint8 _threadsNumber;                       // number of threads
+  uint32_t _threadsNumber;                       // number of threads
   std::thread** _processThreads;              // list of threads
 
   SyncSwapQueueSPSC<FastBundle>** _fastSyncSwapQueues;  // SyncSwapQueue for FastBundles
@@ -50,7 +50,7 @@ private:
   inline void skipLine(char* &bp, char* &bp_end, const size_t &l, const size_t &tId);
   inline void storeLine(
     char* &bp, char* &bp_end, size_t &l,
-    ReadBundle* &readBundle, ReadBundle* &rbs, const size_t &tId
+    ReadBundle* &readBundle, ReadBundle* &rbs, const size_t &tId, const char & skip
   );
 
   void nextPart(char* &bp, char* &bp_end, const size_t &tId);
@@ -71,7 +71,7 @@ public:
   FastParser(
       uint32 &readBundlesNumber, TFileType fileType, TSeqType seqType,
       SyncSwapQueueSPSC<FastBundle>** _fastSyncSwapQueues,
-      const uint8 &_readerParserThreadsNumber
+      const uint32_t &_readerParserThreadsNumber
   );
 
   /*

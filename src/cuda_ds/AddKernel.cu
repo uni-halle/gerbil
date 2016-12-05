@@ -11,7 +11,7 @@ namespace internal {
 //#define DEBUG
 
 // constants
-const uint32_t MAXTRIALS = 60;
+const uint32_t MAXTRIALS = 30;
 const uint32_t STATUS_LOCKED = 1;
 const uint32_t STATUS_FREE = 2;
 const uint32_t STATUS_OCCUPIED = 3;
@@ -34,13 +34,13 @@ template<uint32_t intsPerKey,		// number of ints per key
 >
 __global__ void addKernel(
 		volatile KeyValuePair<intsPerKey>* table,	// pointer to hash table
-		const uint32_t numEntries,			// number of entries in hash table
+		const uint64_t numEntries,			// number of entries in hash table
 		const Key<intsPerKey>* keyBundle,	// pointer to keys which are to be inserted
-		const uint32_t numKeys,				// number of keys in key bundle
+		const uint64_t numKeys,				// number of keys in key bundle
 		Key<intsPerKey>* noSuccessArea,		// pointer to area where keys are copied to when they
 											// cannot be inserted after MAXTRIALS trials
-		uint32_t* numNoSuccessPtr,			// number of unsuccessfully inserted keys
-		const uint32_t maxNumNoSuccess		// maximal number of keys in noSuccessArea
+		uint64_t* numNoSuccessPtr,			// number of unsuccessfully inserted keys
+		const uint64_t maxNumNoSuccess		// maximal number of keys in noSuccessArea
 		) {
 
 	/**************************************************************************
@@ -123,7 +123,7 @@ __global__ void addKernel(
 #endif
 
 			// number of entries probed in this trial
-			numEntriesLoaded = min(entriesPerBlock, (numEntries - basePosition));
+			numEntriesLoaded = min(entriesPerBlock, (uint32_t) (numEntries - basePosition));
 
 			// thread-own probing address
 			addr = &tableInts[basePosition * intsPerEntry + threadID];
@@ -394,7 +394,7 @@ __global__ void addKernel(
 #endif
 
 				// get address where to write kmer
-				uint32_t numNoSucces = atomicAdd(numNoSuccessPtr, 1);
+				uint64_t numNoSucces = atomicAdd((unsigned long long int*) numNoSuccessPtr, (unsigned long long int) 1);
 				if (numNoSucces < maxNumNoSuccess) {
 					addr = (uint32_t*) (noSuccessArea + numNoSucces);
 					// write kmer to area
@@ -409,27 +409,30 @@ __global__ void addKernel(
 template<uint32_t intsPerKey>
 void addToTable(
 		KeyValuePair<intsPerKey>* table,	// pointer to the hash table
-		const uint32_t numEntries,			// maximum number of entries in table
+		const uint64_t numEntries,			// maximum number of entries in table
 		const Key<intsPerKey>* keyBundle,	// pointer to the keys that shall be insert
-		const uint32_t numKeys,				// number of keys to be inserted
+		const uint64_t numKeys,				// number of keys to be inserted
 		cudaStream_t& stream,				// cuda stream to use
 		Key<intsPerKey>* noSuccessArea,		// pointer to no success area (aka area of shame)
-		uint32_t* numNoSuccessPtr,			// pointer to number of unsuccessful inserted keys
-		const uint32_t maxNumNoSuccess		// maximum number of keys that can be inserted unsuccessfully
+		uint64_t* numNoSuccessPtr,			// pointer to number of unsuccessful inserted keys
+		const uint64_t maxNumNoSuccess		// maximum number of keys that can be inserted unsuccessfully
 		) {
 
 	// kernel launch parameters
-	const uint32_t blocksize = 32;
+	// number of threads per block is smallest multiple of 32 that is larger than (intsPerKey+1)
+	const uint32_t blocksize = ((intsPerKey + 1 + 31) / 32) * 32;
 	//const uint32_t processKeysPerBlock = 128 / sizeof(Key<intsPerKey>);
 	const uint32_t processKeysPerBlock = 32;
-	const uint32_t gridsize = (numKeys + processKeysPerBlock - 1)
+	const uint64_t gridsize = (numKeys + processKeysPerBlock - 1)
 			/ processKeysPerBlock;
 
 	/*printf("processKeysPerBlock = %i\n", processKeysPerBlock);
-	printf("gridsize            = %i\n", gridsize);
-	printf("numEntries          = %i\n", numEntries);
-	printf("numKeys             = %i\n", numKeys);
-	printf("maxNumNoSuccess     = %i\n", maxNumNoSuccess);*/
+	printf("gridsize            = %lu\n", gridsize);
+	printf("numEntries          = %lu\n", numEntries);
+	printf("numKeys             = %lu\n", numKeys);
+	printf("maxNumNoSuccess     = %lu\n", maxNumNoSuccess);
+	printf("sharedMemory        = %lu\n", (sizeof(uint32_t)* (2 + 2 * blocksize / (intsPerKey+1)
+	                                      + intsPerKey * processKeysPerBlock)));*/
 
 	// launch kernel
 	addKernel
@@ -443,7 +446,7 @@ void addToTable(
 	if (err != cudaSuccess) {
 		throw std::runtime_error(
 				std::string(
-						std::string("cuda_ds::exception: ")
+						std::string("cuda_ds::addToTable::exception1: ")
 								+ cudaGetErrorName(err)) + std::string(": ")
 						+ std::string(cudaGetErrorString(err)));
 	}
@@ -451,54 +454,38 @@ void addToTable(
 
 template<uint32_t intsPerKey>
 void sortKeys(Key<intsPerKey>* keys, const uint64_t numKeys) {
-
 	thrust::device_ptr<Key<intsPerKey> > ptr(keys);
 	thrust::sort(ptr, ptr + numKeys);
-
 }
 
 
 /**
  * Export Templates for meaningful ints per key.
  */
-#define EXPORT(x) 																\
-	template void addToTable<x>(KeyValuePair<x>*, const uint32_t,				\
-		const Key<x>*, const uint32_t, cudaStream_t&,							\
-		Key<x>*, uint32_t*, const uint32_t); 									\
-	template void sortKeys<x>(Key<x>*, const uint64_t);
-
+#define EXPORT(intsPerKey) 																\
+	template void addToTable<intsPerKey>(KeyValuePair<intsPerKey>*, const uint64_t,				\
+		const Key<intsPerKey>*, const uint64_t, cudaStream_t&,							\
+		Key<intsPerKey>*, uint64_t*, const uint64_t); 									\
+	template void sortKeys<intsPerKey>(Key<intsPerKey>*, const uint64_t);
 
 EXPORT(1)
 EXPORT(2)
-EXPORT(3)
 EXPORT(4)
-EXPORT(5)
 EXPORT(6)
-EXPORT(7)
 EXPORT(8)
-EXPORT(9)
 EXPORT(10)
-EXPORT(11)
 EXPORT(12)
-EXPORT(13)
 EXPORT(14)
-EXPORT(15)
 EXPORT(16)
-EXPORT(17)
 EXPORT(18)
-EXPORT(19)
 EXPORT(20)
-EXPORT(21)
 EXPORT(22)
-EXPORT(23)
 EXPORT(24)
-EXPORT(25)
 EXPORT(26)
-EXPORT(27)
 EXPORT(28)
-EXPORT(29)
 EXPORT(30)
-EXPORT(31)
+EXPORT(32)
+EXPORT(34)
 
 }
 }

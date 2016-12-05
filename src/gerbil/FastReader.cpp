@@ -184,6 +184,7 @@ void gerbil::FastReader::readFile(const FastFile &fastFile,
 				exit(5);
 			}
 			curFastBundle->size += readSize;
+
 			curData += readSize;
 			filePos += readSize;
 			++_totalBlocksRead;

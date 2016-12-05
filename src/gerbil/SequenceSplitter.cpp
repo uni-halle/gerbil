@@ -310,7 +310,8 @@ void gerbil::SequenceSplitter::processThread(const uint &id) {
 
 		for(uint32 i(_m - 1); i < reads_size; ++i) {
 			cur_val = mmerval[i];
-			
+
+
 			if(cur_val == SS_MMER_VAL_UNDEFINED) {
 				// completed s-mer --> undefined minimizer (e.g. end of read)
 				// save the last smer
@@ -349,7 +350,8 @@ void gerbil::SequenceSplitter::processThread(const uint &id) {
 				min_val = cur_val;
 				min_val_pos = i;
 			}
-			else if(i - min_val_pos > _k - _m) {
+			else if(i - min_val_pos > _k - _m || smer_c > 512) {
+			//else if(i - min_val_pos > _k - _m) {
 				// completed s-mer --> minimizer is out of range
 				// save last s-mer
 				if(smer_c > 0) {
