@@ -24,10 +24,10 @@ Gerbil is developed and tested at Linux operating systems. Migrating it to other
         cd gerbil
         mkdir build
         cd build
-        cmake ..
+        cmake -DCMAKE_BUILD_TYPE=Release ..
         make
 
-The `build` directory should now contain a binary `Gerbil`.
+The `build` directory should now contain a binary `gerbil`.
 
 ## Usage
 
@@ -48,8 +48,8 @@ Gerbil can be controlled by several command line options and flags.
 | `-v` | Show version number.      |     |
 | `-d` | Disable normalization of k-mers. If normalization is disabled, a k-mer and its reverse complement are considered as different k-mers. If normalization is enabled, we map both k-mer and its reverse complement to the same k-mer.       |     |
 | `-s` | Perform a system check and display information about your system.     |     |
-| `-x 1` | Stop execution after Phase One. Do not remove temporary files and `binStatFile` (with statistical information). Watch out: no `output` allowed. |     |
-| `-x 2` | Only execute Phase Two. Requires temporary files and `binStatFile`. No `input` allowed. |     |
+| `-x 1` | Stop execution after Phase One. Do not remove temporary files and `binStatFile` (with statistical information). When using this option, no `output` parameter is allowed. |     |
+| `-x 2` | Only execute Phase Two. Requires temporary files and `binStatFile`. No `input` parameter is allowed. |     |
 | `-x b` | Do not remove `binStatFile`. |     |
 | `-x h` | Create a histogram of k-mers in a human readable format in output directory. |     |
 
@@ -59,7 +59,7 @@ Gerbil supports the following input formats of genome read data in raw and compr
  * fastq
  * fasta
  * staden
- * Textfile containing paths to one or more input files
+ * simple text file. Each line contains a path that refers to other input files.
 
 ## Output Format
 
