@@ -94,11 +94,11 @@ namespace gerbil {
 
 #define DEF_KMER_SIZE 28
 #define MIN_KMER_SIZE 8
-#define MAX_KMER_SIZE 479
+#define MAX_KMER_SIZE 512+MIN_KMER_SIZE
 
-#define DEF_MEMORY_SIZE ((uint64)  4 * 1024)
-#define MIN_MEMORY_SIZE ((uint64)       512)
-#define MAX_MEMORY_SIZE ((uint64) 1024 * 1024 * 1024)
+#define DEF_MEMORY_SIZE ((uint64_t)  4 * 1024)
+#define MIN_MEMORY_SIZE ((uint64_t)       512)
+#define MAX_MEMORY_SIZE ((uint64_t) 1024 * 1024 * 1024)
 
 #define DEF_TEMPFILES_NUMBER 512
 #define MIN_TEMPFILES_NUMBER 2
@@ -122,13 +122,13 @@ namespace gerbil {
 #define SB_WRITER_THREADS_NUMBER 1
 
 
-#define GB_TO_B(x) ((uint64)x << 30)
-#define MB_TO_B(x) ((uint64)x << 20)
-#define KB_TO_B(x) ((uint64)x << 10)
+#define GB_TO_B(x) ((uint64_t)x << 30)
+#define MB_TO_B(x) ((uint64_t)x << 20)
+#define KB_TO_B(x) ((uint64_t)x << 10)
 
-#define B_TO_GB(x) ((uint64)x >> 30)
-#define B_TO_MB(x) ((uint64)x >> 20)
-#define B_TO_KB(x) ((uint64)x >> 10)
+#define B_TO_GB(x) ((uint64_t)x >> 30)
+#define B_TO_MB(x) ((uint64_t)x >> 20)
+#define B_TO_KB(x) ((uint64_t)x >> 10)
 
 // sizes of bundles
 #define FAST_BLOCK_SIZE_B				KB_TO_B( 64)

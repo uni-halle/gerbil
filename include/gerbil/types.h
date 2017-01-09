@@ -77,13 +77,7 @@ inline void memoryBarrier() {
 	asm volatile("" ::: "memory");
 }
 
-#define LINUX
-
-#ifdef LINUX
 #define CAS(addr, old, val) __sync_val_compare_and_swap(addr, old, val)
-#else
-#error invalid System
-#endif
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 //supported

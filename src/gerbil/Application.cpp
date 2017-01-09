@@ -6,17 +6,64 @@
  */
 
 #include "../../include/gerbil/Application.h"
-#include <sys/sysinfo.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/resource.h>
-#include <unistd.h>
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
+
+#ifdef __linux__
+#include <sys/sysinfo.h>
+#elif _WIN32
+#include <windows.h>
+#else
+// is there another OS?
+#endif
 
 #ifdef GPU
 #include <cuda_runtime.h>
 #endif
+
+
+/**
+ * Detect the total amount of memory at the system.
+ * @return
+ */
+unsigned long long getTotalSystemMemory()  {
+#ifdef __linux__
+	struct sysinfo info;
+	if(!sysinfo(&info))
+		return DEF_MEMORY_SIZE;
+	return info.totalram;
+#elif _WIN32
+	MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+    GlobalMemoryStatusEx(&status);
+    return status.ullTotalPhys;
+#else
+	return DEF_MEMORY_SIZE;
+#endif
+}
+
+
+/**
+ * Detect the amount of free memory at the system.
+ * @return
+ */
+unsigned long long getFreeSystemMemory()  {
+#ifdef __linux__
+	struct sysinfo info;
+	if(!sysinfo(&info))
+		return DEF_MEMORY_SIZE;
+	return info.freeram;
+#elif _WIN32
+	MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+    GlobalMemoryStatusEx(&status);
+    return status.ullAvailPhys;
+#else
+	return DEF_MEMORY_SIZE;
+#endif
+}
+
+
 
 /*
  * Constructor
@@ -567,18 +614,20 @@ void gerbil::Application::checkSystem() {
 	/*printf("total-ram: %lu\n", (size_t)sysconf( _SC_PHYS_PAGES ) *
 	 (size_t)sysconf( _SC_PAGESIZE ));*/
 
-	struct sysinfo info;
-	sysinfo(&info);
+	//struct sysinfo info;
+	//sysinfo(&info);
+	uint64_t totalram = getTotalSystemMemory();
+	uint64_t freeram = getFreeSystemMemory();
 	printf("total-ram: %2.3f GB\n",
-			(double) info.totalram / 1024 / 1024 / 1024);
-	printf("free-ram: %2.3f GB\n", (double) info.freeram / 1024 / 1024 / 1024);
+			(double) totalram / 1024 / 1024 / 1024);
+	printf("free-ram: %2.3f GB\n", (double) freeram / 1024 / 1024 / 1024);
 
-	struct stat64 stat_buf;
+	/*struct stat64 stat_buf;
 	if (!_fastFileName.empty() && !stat64(_fastFileName.c_str(), &stat_buf)) {
 		printf("file size: %f GB\n",
 				(double) stat_buf.st_size / 1024 / 1024 / 1024);
 
-	}
+	}*/
 }
 
 void gerbil::Application::autocompleteParams() {
@@ -606,15 +655,16 @@ void gerbil::Application::autocompleteParams() {
 
 	// set size of available memory
 	if (!_memSize) {
-		struct sysinfo info;
-		if (!sysinfo(&info)) {
-			_memSize = info.totalram / 1024 / 1024;
+		//struct sysinfo info;
+		//if (!sysinfo(&info)) {
+		uint64_t totalram = getTotalSystemMemory();
+			_memSize = totalram / 1024 / 1024;
 			if (_memSize > 1024)				// for system and file buffers
 				_memSize -= 1024;
 			else
 				_memSize = 0;					// no auto setup
-		} else
-			_memSize = DEF_MEMORY_SIZE;
+		//} else
+		//	_memSize = DEF_MEMORY_SIZE;
 	}
 
 	if (!_sequenceSplitterThreadsNumber)
