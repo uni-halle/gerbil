@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(gerbil)
 
-set(CMAKE_CXX_STANDARD 11)
+# Compile Flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # Include Files
 set(HEADER_FILES
