@@ -20,7 +20,7 @@ Gerbil is developed and tested at Linux operating systems. Migrating it to other
 
         git clone https://github.com/uni-halle/gerbil.git
         
-3. Compile the Sources. Gerbil comes with a CMake that shold work for various operating systems. CMake will automatically detect whether all mandatory and optional libraries are available at your system.
+3. Compile the Sources. Gerbil comes with a CMake Script that shold work for various operating systems. CMake will automatically detect whether all mandatory and optional libraries are available at your system.
 
         cd gerbil
         mkdir build
