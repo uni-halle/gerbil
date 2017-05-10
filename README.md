@@ -6,7 +6,10 @@ all substrings of length k in a given genome sequence.
 Gerbil is a k-mer counter that is specialized for high effiency when counting k-mers for large k. 
 The software is decribed [here](https://almob.biomedcentral.com/articles/10.1186/s13015-017-0097-9).
 
-Developed by: Marius Erbert, Steffen Rechner, Martin Luther University Halle-Wittenberg
+To cite Gerbil in publication, please use
+> Marius Erbert, Steffen Rechner, and Matthias Müller-Hannemann,
+> Gerbil: A fast and memory-efficient k-mer counter with GPU-support,
+> Algorithms for Molecular Biology (2017) 12:9, open access.
 
 ## Install
 
