@@ -38,22 +38,22 @@ Gerbil can be controlled by several command line options and flags.
 
 | Option               | Description   | Default |
 |:---------------------|:--------------| -------:|
-| <code>-k int</code>   | Set the value of k, i.e. the length of k-mers to be counted. Supported k currently ranges from 8 to 479. | 28 |
-| <code>-m&nbsp;int</code>          | Set the length m of minimizers.      |   auto |
-| <code>-e&nbsp;xMB</code>  | Restrict the maximal size of main memory Gerbil is allowed to `x MB`.      |    auto |
-| <code>-e&nbsp;xGB</code>  | Restrict the maximal size of main memory Gerbil is allowed to `x GB`.      |    auto |
-| <code>-f&nbsp;int</code>          | Set the number of temporary files.      |    512 |
-| <code>-t&nbsp;int</code>          | Set the maximal number of parallel threads to use.      |    auto |
-| <code>-l&nbsp;int</code>               | Set the minimal occurrence of a k-mer to be outputted.      |    3 |
-| <code>-i</code>                   | Enable additional debug output.      |    |
-| <code>-g</code>                   | Enable GPU mode. Gerbil will automatically detect CUDA-capable devices and will use them for counting in the second phase.      |     |
-| <code>-v</code>                   | Show version number.      |     |
-| <code>-d</code>                   | Disable normalization of k-mers. If normalization is disabled, a k-mer and its reverse complement are considered as different k-mers. If normalization is enabled, we map both k-mer and its reverse complement to the same k-mer.       |     |
-| <code>-s</code>                   | Perform a system check and display information about your system.     |     |
-| <code>-x&nbsp;1</code>                 | Stop execution after Phase One. Do not remove temporary files and `binStatFile` (with statistical information). When using this option, no `output` parameter is allowed. |     |
-| <code>-x&nbsp;2</code>            | Execute only Phase Two. Requires temporary files and `binStatFile`. No `input` parameter is allowed. |     |
-| <code>-x&nbsp;b</code>            | Do not remove `binStatFile`. |     |
-| <code>-x&nbsp;h</code>            | Create a histogram of k-mers in a human readable format in output directory. |     |
+| -k int   | Set the value of k, i.e. the length of k-mers to be counted. Supported k currently ranges from 8 to 479. | 28 |
+| -m int          | Set the length m of minimizers.      |   auto |
+| -e&nbsp;xMB  | Restrict the maximal size of main memory Gerbil is allowed to x MB.      |    auto |
+| -e&nbsp;xGB  | Restrict the maximal size of main memory Gerbil is allowed to x GB.      |    auto |
+| -f&nbsp;int          | Set the number of temporary files.      |    512 |
+| -t&nbsp;int          | Set the maximal number of parallel threads to use.      |    auto |
+| -l&nbsp;int               | Set the minimal occurrence of a k-mer to be outputted.      |    3 |
+| -i                   | Enable additional debug output.      |    |
+| -g                   | Enable GPU mode. Gerbil will automatically detect CUDA-capable devices and will use them for counting in the second phase.      |     |
+| -v                   | Show version number.      |     |
+| -d                   | Disable normalization of k-mers. If normalization is disabled, a k-mer and its reverse complement are considered as different k-mers. If normalization is enabled, we map both k-mer and its reverse complement to the same k-mer.       |     |
+| -s                   | Perform a system check and display information about your system.     |     |
+| -x&nbsp;1                 | Stop execution after Phase One. Do not remove temporary files and `binStatFile` (with statistical information). When using this option, no `output` parameter is allowed. |     |
+| -x&nbsp;2            | Execute only Phase Two. Requires temporary files and `binStatFile`. No `input` parameter is allowed. |     |
+| -x&nbsp;b            | Do not remove `binStatFile`. |     |
+| -x&nbsp;h            | Create a histogram of k-mers in a human readable format in output directory. |     |
 
 ## Input Formats
 
