@@ -3,7 +3,8 @@
 A basic task in bioinformatics is the counting of k-mers in
 genome strings. The k-mer counting problem is to build a histogram of
 all substrings of length k in a given genome sequence. 
-Gerbil is a k-mer counter that is specialized for high effiency when counting k-mers for large k. For a comprehensive description see our [arxiv](http://arxiv.org/abs/1607.06618) article.
+Gerbil is a k-mer counter that is specialized for high effiency when counting k-mers for large k. 
+The software is decribed [here](https://almob.biomedcentral.com/articles/10.1186/s13015-017-0097-9).
 
 Developed by: Marius Erbert, Steffen Rechner, Martin Luther University Halle-Wittenberg
 
@@ -31,35 +32,35 @@ The `build` directory should now contain a binary `gerbil`.
 
 ## Usage
 
-```gerbil [option|flag]* input temp output```
+        gerbil [option|flag]* <input-file> <temp-directory> <output-file>
 
 Gerbil can be controlled by several command line options and flags.
 
-| Option                  | Description   | Default |
-|:------------------------|:--------------| -------:|
-| `-k int`        | Set the value of k, i.e. the length of k-mers to be counted. Supported k currently ranges from 8 to 479. | 28 |
-| `-m int`       | Set the length m of minimizers.      |   auto |
-| `-e int(MB|GB)` | Restrict the maximal size of main memory in `MB` or `GB` that Gerbil is allowed to use.      |    auto |
-| `-f int` | Set the number of temporary files.      |    512 |
-| `-t int` | Set the maximal number of parallel threads to use.      |    auto |
-| `-l int` | Set the minimal occurrence of a k-mer to be outputted.      |    3 |
-| `-i` | Enable additional output.      |    |
-| `-g` | Enable GPU mode. Gerbil will automatically detect CUDA-capable devices and will use them for counting in the second phase.      |     |
-| `-v` | Show version number.      |     |
-| `-d` | Disable normalization of k-mers. If normalization is disabled, a k-mer and its reverse complement are considered as different k-mers. If normalization is enabled, we map both k-mer and its reverse complement to the same k-mer.       |     |
-| `-s` | Perform a system check and display information about your system.     |     |
-| `-x 1` | Stop execution after Phase One. Do not remove temporary files and `binStatFile` (with statistical information). When using this option, no `output` parameter is allowed. |     |
-| `-x 2` | Only execute Phase Two. Requires temporary files and `binStatFile`. No `input` parameter is allowed. |     |
-| `-x b` | Do not remove `binStatFile`. |     |
-| `-x h` | Create a histogram of k-mers in a human readable format in output directory. |     |
+Option               | Description   | Default 
+---------------------| --------------| -------
+ `-k int`            | Set the value of k, i.e. the length of k-mers to be counted. Supported k currently ranges from 8 to 479. | 28 
+ `-m int`                | Set the length m of minimizers.      |   auto 
+ <code>-e xMB&#124;GB</code>  | Restrict the maximal size of main memory Gerbil is allowed to use to `x MB` or `x GB`.      |    auto 
+ `-f int`                | Set the number of temporary files.      |    512 
+ `-t int`                | Set the maximal number of parallel threads to use.      |    auto 
+ `-l int`                | Set the minimal occurrence of a k-mer to be outputted.      |    3 
+ `-i`                    | Enable additional debug output.      |    
+ `-g`                    | Enable GPU mode. Gerbil will automatically detect CUDA-capable devices and will use them for counting in the second phase.      |     
+ `-v`                    | Show version number.      |     
+ `-d`                    | Disable normalization of k-mers. If normalization is disabled, a k-mer and its reverse complement are considered as different k-mers. If normalization is enabled, we map both k-mer and its reverse complement to the same k-mer.       |     
+ `-s`                    | Perform a system check and display information about your system.     |     
+ `-x 1`                  | Stop execution after Phase One. Do not remove temporary files and `binStatFile` (with statistical information). When using this option, no `output` parameter is allowed. |     
+ `-x 2`                  | Execute only Phase Two. Requires temporary files and `binStatFile`. No `input` parameter is allowed. |     
+ `-x b`                  | Do not remove `binStatFile`. |     
+ `-x h`                  | Create a histogram of k-mers in a human readable format in output directory. |     
 
 ## Input Formats
 
 Gerbil supports the following input formats of genome read data in raw and compressed format: 
- * fastq
- * fasta
- * staden
- * simple text file. Each line contains a path that refers to other input files.
+ * `fastq`, `fastq.gz`, `fastq.bz2`
+ * `fasta`, `fasta.gz`, `fastq.bz2`
+ * `staden`
+ * `txt`: Each line of the text file should contain a path that refers to a input file.
 
 ## Output Format
 
@@ -71,4 +72,8 @@ Examples (`X` means undefined):
 |:--------|:--------|:------------------------------|
 | 67      | AACGTG  | `01000011 00000110 1110XXXX` |
 | 345     | TGGATC  | `11111111 00000000 00000000 00000001 01011001 11101000 1101XXXX` |
+
+The output file can be converted into `fasta` format by running the command
+
+        toFasta <gerbil-output> <k> [<fasta-output>]
 
