@@ -87,6 +87,9 @@ endif ()
 # build executable
 add_executable(gerbil ${HEADER_FILES} ${SOURCE_FILES_CPP} ${CUDA_OBJECTS})
 
+# build conversion binary
+add_executable(toFasta "src/gerbil/toFasta.cpp")
+
 # link against external libraries
 target_link_libraries(gerbil ${MY_LIBS})
 
