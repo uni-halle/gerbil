@@ -38,22 +38,22 @@ Gerbil can be controlled by several command line options and flags.
 
 | Option               | Description   | Default |
 |:---------------------|:--------------| -------:|
-| `‑k int`   | Set the value of k, i.e. the length of k-mers to be counted. Supported k currently ranges from 8 to 479. | 28 |
-| `‑m int`          | Set the length m of minimizers.      |   auto |
-| `‑e xMB`  | Restrict the maximal size of main memory Gerbil is allowed to use to x MB.      |    auto |
-| `‑e xGB`  | Restrict the maximal size of main memory Gerbil is allowed to use to x GB.      |    auto |
-| `‑f int`          | Set the number of temporary files.      |    512 |
-| `‑t int`          | Set the maximal number of parallel threads to use.      |    auto |
-| `‑l int`               | Set the minimal occurrence of a k-mer to be outputted.      |    3 |
+| `‑k int`   | Set the value of k, i.e. the length of k-mers to be counted. Supported k currently ranges from 8 to 479. | 28 |
+| `‑m int`          | Set the length m of minimizers.      |   auto |
+| `‑e xMB`  | Restrict the maximal size of main memory Gerbil is allowed to use to x MB.      |    auto |
+| `‑e xGB`  | Restrict the maximal size of main memory Gerbil is allowed to use to x GB.      |    auto |
+| `‑f int`          | Set the number of temporary files.      |    512 |
+| `‑t int`          | Set the maximal number of parallel threads to use.      |    auto |
+| `‑l int`               | Set the minimal occurrence of a k-mer to be outputted.      |    3 |
 | `‑i`                   | Enable additional debug output.      |    |
 | `‑g`                   | Enable GPU mode. Gerbil will automatically detect CUDA-capable devices and will use them for counting in the second phase.      |     |
 | `‑v`                   | Show version number.      |     |
 | `‑d`                   | Disable normalization of k-mers. If normalization is disabled, a k-mer and its reverse complement are considered as different k-mers. If normalization is enabled, we map both k-mer and its reverse complement to the same k-mer.       |     |
 | `‑s`                   | Perform a system check and display information about your system.     |     |
-| `‑x 1`                 | Stop execution after Phase One. Do not remove temporary files and `binStatFile` (with statistical information). When using this option, no `output` parameter is allowed. |     |
-| `‑x 2`            | Execute only Phase Two. Requires temporary files and `binStatFile`. No `input` parameter is allowed. |     |
-| `‑x b`            | Do not remove `binStatFile`. |     |
-| `‑x h`            | Create a histogram of k-mers in a human readable format in output directory. |     |
+| `‑x 1`                 | Stop execution after Phase One. Do not remove temporary files and `binStatFile` (with statistical information). When using this option, no `output` parameter is allowed. |     |
+| `‑x 2`            | Execute only Phase Two. Requires temporary files and `binStatFile`. No `input` parameter is allowed. |     |
+| `‑x b`            | Do not remove `binStatFile`. |     |
+| `‑x h`            | Create a histogram of k-mers in a human readable format in output directory. |     |
 
 ## Input Formats
 
