@@ -64,7 +64,7 @@ Gerbil supports the following input formats of genome read data in raw and compr
  * `fastq`, `fastq.gz`, `fastq.bz2`
  * `fasta`, `fasta.gz`, `fastq.bz2`
  * `staden`
- * `txt`: A plain text file with one path per line.
+ * `txt`: A plain text file with one path per line. This way, multiple input files can be processed at once.
 
 ## Output Format
 
