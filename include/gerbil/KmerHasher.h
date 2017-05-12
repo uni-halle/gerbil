@@ -532,7 +532,9 @@ namespace gerbil {
 			// decide which template specialization to use
 			switch (_k) {
 
-					LOOP512(MAX_KMER_SIZE, C_PROC);
+					//LOOP512(MAX_KMER_SIZE, C_PROC);
+					//LOOP256(MAX_KMER_SIZE, C_PROC);
+					LOOP128(MAX_KMER_SIZE, C_PROC);
 					/*C_PROC(28);
 					C_PROC(40);
 					C_PROC(56);
