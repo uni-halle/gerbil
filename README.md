@@ -17,7 +17,7 @@ Gerbil is developed and tested at Linux operating systems. Migrating it to other
 
 1. Install 3rd-party libraries and neccessary software:
 
-        sudo apt-get install git cmake g++ libboost-all-dev libz3-dev
+        sudo apt-get install git cmake g++ libboost-all-dev libz3-dev libbz2-dev
 
 2. Download the Source Files. 
 
