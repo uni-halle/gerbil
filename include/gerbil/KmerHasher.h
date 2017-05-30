@@ -475,12 +475,13 @@ namespace gerbil {
 		           uint_tfn *tempFilesOrder,
 		           KmerDistributer *distributor
 		) :
-				_kmcSyncSwapQueue(kmcBundlesNumber), _processSplitterThreadsNumber(
-				processSplitterThreadsNumber), _numCPUHasher(
-				processHasherThreadsNumber), _numGPUHasher(
-				processGPUHasherThreadsNumber), barrier(nullptr), _k(k), _tempFilesNumber(
-				tempFilesNumber), _thresholdMin(thresholdMin), _norm(norm), _tempFolder(
-				pTempFolder), _superBundleQueue(superBundleQueue), _tempFiles(
+				_kmcSyncSwapQueue(kmcBundlesNumber),
+				_processSplitterThreadsNumber(processSplitterThreadsNumber),
+				_numCPUHasher(processHasherThreadsNumber),
+				_numGPUHasher(processGPUHasherThreadsNumber),
+				barrier(nullptr), _k(k), _tempFilesNumber(tempFilesNumber),
+				_thresholdMin(thresholdMin), _norm(norm), _tempFolder(pTempFolder),
+				_superBundleQueue(superBundleQueue), _tempFiles(
 				tempFiles), _processThread(NULL), _kMersNumberCPU(0), _kMersNumberGPU(
 				0), _uKMersNumberCPU(0), _uKMersNumberGPU(0), _btUKMersNumberCPU(
 				0), _btUKMersNumberGPU(0), _maxKmcHashtableSize(
@@ -533,12 +534,11 @@ namespace gerbil {
 			switch (_k) {
 
 					//LOOP512(MAX_KMER_SIZE, C_PROC);
-					//LOOP256(MAX_KMER_SIZE, C_PROC);
 					LOOP128(MAX_KMER_SIZE, C_PROC);
-					/*C_PROC(28);
-					C_PROC(40);
-					C_PROC(56);
-					C_PROC(65);*/
+					//C_PROC(28);
+					//C_PROC(40);
+					//C_PROC(56);
+					//C_PROC(65);
 				default:
 					throw std::runtime_error(
 							std::string("Gerbil Error: Unsupported k"));

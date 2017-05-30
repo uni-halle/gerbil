@@ -8,19 +8,22 @@
 #include "../../include/gerbil/KmcWriter.h"
 
 
-gerbil::KmcWriter::KmcWriter(std::string fileName, SyncSwapQueueMPSC<KmcBundle>* kmcSyncSwapQueue, const uint32_t &k) {
+gerbil::KmcWriter::KmcWriter(std::string fileName, SyncSwapQueueMPSC<KmcBundle>* kmcSyncSwapQueue, const uint32_t &k, const TOutputFormat pOutputFormat) {
 	_processThread = NULL;
 	_fileName = fileName;
 	_k = k;
+	_outputFormat = pOutputFormat;
 	_kmcSyncSwapQueue = kmcSyncSwapQueue;
-	std::remove(_fileName.c_str());
-	_file = fopen (_fileName.c_str() , "wb" );
-	if(!_file) {
-		std::cerr << "unable to create output-file" << std::endl;
-		exit(21);
+	if(_outputFormat != of_none) {
+		std::remove(_fileName.c_str());
+		_file = fopen(_fileName.c_str(), "wb");
+		if (!_file) {
+			std::cerr << "unable to create output-file" << std::endl;
+			exit(21);
+		}
 	}
-	setbuf(_file, NULL);
-
+	if(_outputFormat == of_gerbil)
+		setbuf(_file, NULL);
 	_fileSize = 0;
 }
 
@@ -42,44 +45,52 @@ void gerbil::KmcWriter::process() {
 		)
 		KmcBundle* kb = new KmcBundle;
 
-		uint64 s = 0;
-		IF_MESS_KMCWRITER(sw.hold();)
-		while(_kmcSyncSwapQueue->swapPop(kb)) {
-			IF_MESS_KMCWRITER(sw.proceed();)
-			//printf("++++++++++++++++++++++++++++++++++++++\n");
-			if(!kb->isEmpty()) {
-				_fileSize += kb->getSize();
-				if(true) {
-					//printf(">>>>write: %u\n", kb->getSize());
-					fwrite ((char*) kb->getData() , 1 , kb->getSize() , _file );
-				}
-				else {
+		if(_outputFormat == of_fasta) {
+			uint32 counter;
+			char kmerSeq[_k + 1]; kmerSeq[_k] = '\0';
+			const size_t kMerSize_B = (_k + 3) / 4;
+			const char c[4] = {'A', 'C', 'G', 'T'};
+
+			IF_MESS_KMCWRITER(sw.hold();)
+			while(_kmcSyncSwapQueue->swapPop(kb)) {
+				IF_MESS_KMCWRITER(sw.proceed();)
+				if(!kb->isEmpty()) {
 					const byte* p = kb->getData();
 					const byte* end = p + kb->getSize();
-					const byte* lp;
-					char* a;
-					uint32 l;
 					while(p < end) {
-						//fprintf(_file, "%3.0f|", (double)*(p++));
-						//continue;
-						l = (uint32)*(p++);
-						if(l >= 255) {
-							l = *((uint32*)p);
+						counter = (uint32)*(p++);
+						if(counter >= 255) {
+							// large value
+							counter = *((uint32*)p);
 							p += 4;
 						}
-						a = getByteCodedSeq(p, _k);
-						lp = p;
-						p += getKMerCompactByteNumbers(_k);
-						fprintf(_file, ">%9u\n%s\n", l, a);
-						//fprintf(_file, "%u\n",l);
-						delete[] a;
-						//fprintf(_file, "[0x %02x %02x %02x %02x %02x %02x %02x] %s: %9d\n", lp[0], lp[1], lp[2], lp[3], lp[4], lp[5], lp[6], a, l);
+						// k-mer: convert bytes to string
+						for(uint i = 0; i < _k; ++i)
+							kmerSeq[i] = c[(p[i >> 2] >> (2 * (3 - (i & 0x3)))) & 0x3];
+
+						// increase pointer
+						p += kMerSize_B;
+
+						// print fasta (console/file)
+						fprintf(_file, ">%u\n%s\n", counter, kmerSeq);
 					}
 				}
+				kb->clear();
+				IF_MESS_KMCWRITER(sw.hold();)
 			}
-			kb->clear();
-			//putchar('!');
+			_fileSize = ftell(_file);
+		}
+		else if(_outputFormat == of_gerbil) {
 			IF_MESS_KMCWRITER(sw.hold();)
+			while(_kmcSyncSwapQueue->swapPop(kb)) {
+				_fileSize += kb->getSize();
+				IF_MESS_KMCWRITER(sw.proceed();)
+				if(!kb->isEmpty()) {
+					fwrite ((char*) kb->getData() , 1 , kb->getSize() , _file );
+				}
+				kb->clear();
+				IF_MESS_KMCWRITER(sw.hold();)
+			}
 		}
 		IF_MESS_KMCWRITER(sw.proceed();)
 

@@ -72,7 +72,60 @@ gerbil::FastReader::FastReader(const uint32_t &frBlocksNumber,
 		}
 	}
 
-	_threadsNumber = someComprFastFiles ? 2 : 1;
+
+
+
+	if(someComprFastFiles) {
+		std::vector<uint64_t> fileSizes;
+
+		for (uint64_t i(0); i < _fastFilesNumber; ++i) {
+			//printf("%12lu\n", ff[i]->getSize());
+			fileSizes.push_back(ff[i]->getSize());
+		}
+
+		sort(fileSizes.begin(), fileSizes.end(), std::greater<uint64_t>());
+
+		const uint minNum = 2;
+		const uint maxNum = 4;
+
+		uint64 totalSize = 0;
+		for (uint64_t i(0); i < _fastFilesNumber; ++i)
+			totalSize += ff[i]->getSize();
+
+		uint64 bestScore = UINT64_MAX;
+		uint64 bestNum = minNum;
+
+		for(uint num = minNum; num <= maxNum; num++) {
+			uint64 optSize = totalSize / num;
+
+			uint64 buckets[num];
+			for(uint i = 0; i < num; ++i)
+				buckets[i] = 0;
+
+			for (auto it = fileSizes.begin(); it != fileSizes.end(); ++it) {
+				uint64 minBucketI = 0;
+				for(uint i = 1; i < num; ++i)
+					if(buckets[i] < buckets[minBucketI])
+						minBucketI = i;
+				buckets[minBucketI] += *it;
+			}
+
+			uint64 score = 0;
+
+			for(uint i = 0; i < num; ++i)
+				score += (buckets[i] - optSize) * (buckets[i] - optSize);
+
+			if(score < bestScore) {
+				bestNum = num;
+				bestScore = score;
+			}
+		}
+
+		_threadsNumber = bestNum;
+		//std::cout << "bestNum = " << (int) _threadsNumber << std::endl;
+	}
+	else
+		_threadsNumber = 1;
 	_readerParserThreadsNumber = _threadsNumber;
 
 	_processThreads = new std::thread*[_threadsNumber];
@@ -98,25 +151,34 @@ gerbil::FastReader::FastReader(const uint32_t &frBlocksNumber,
 ;
 
 // reads a single file
-void gerbil::FastReader::readFile(const FastFile &fastFile,
+void gerbil::FastReader::readFile(
+		const uint tId,
+		const FastFile &fastFile,
 		SyncSwapQueueSPSC<FastBundle> &syncSwapQueue
 #ifdef DEB_MESS_FASTREADER
 		, StopWatch* sw
 #endif
 		) {
 	FastBundle* curFastBundle = new FastBundle;
-	if (fastFile.getSize() > ((uint64) 1 << 30))
-		printf("read file '%s' (%4lu GB)...\n",
-				fastFile.getPath().leaf().c_str(), B_TO_GB(fastFile.getSize()));
-	else
-		printf("read file '%s' (%4lu MB)...\n",
-				fastFile.getPath().leaf().c_str(), B_TO_MB(fastFile.getSize()));
+	bool inGB = fastFile.getSize() > ((uint64) 1 << 30);
+	printf("Thread[%i]: read file '%s' (%4lu %sB)...\n",
+	       tId,
+	       fastFile.getPath().leaf().c_str(),
+	       inGB ? B_TO_GB(fastFile.getSize()) : B_TO_MB(fastFile.getSize()),
+	       inGB ? "G" : "M");
+	//if (fastFile.getSize() > ((uint64) 1 << 30))
+	//	printf("read file '%s' (%4lu GB)...\n",
+	//			fastFile.getPath().leaf().c_str(), B_TO_GB(fastFile.getSize()));
+	//else
+	//	printf("read file '%s' (%4lu MB)...\n",
+	//			fastFile.getPath().leaf().c_str(), B_TO_MB(fastFile.getSize()));
 
 	//open file
 	FILE* file;
 	gzFile_s* gzipFile;
 	BZFILE* bzip2File;
 	switch (fastFile.getCompr()) {
+	case fc_gzip:
 	case fc_none:
 		file = fopen(fastFile.getPath().c_str(), "rb");
 		if (!file) {
@@ -126,7 +188,8 @@ void gerbil::FastReader::readFile(const FastFile &fastFile,
 		}
 		setbuf(file, NULL);
 		break;
-	case fc_gzip:
+	/*
+		case fc_gzip:
 		gzipFile = gzopen(fastFile.getPath().c_str(), "rb");
 		if (!gzipFile) {
 			std::cerr << "ERROR: unable to open File ["
@@ -135,6 +198,7 @@ void gerbil::FastReader::readFile(const FastFile &fastFile,
 		}
 		gzbuffer(gzipFile, 1024 * 1024);
 		break;
+*/
 	case fc_bz2:
 		file = fopen(fastFile.getPath().c_str(), "rb");
 		if (!file) {
@@ -158,7 +222,9 @@ void gerbil::FastReader::readFile(const FastFile &fastFile,
 	uint32 readSize;
 	char* curData = curFastBundle->data;
 
-	if (fastFile.getCompr() == fc_none) {
+	if (fastFile.getCompr() == fc_none
+	    || fastFile.getCompr() == fc_gzip
+			) {
 
 		// determine file size
 		//fseek(file, 0, SEEK_END);
@@ -170,7 +236,7 @@ void gerbil::FastReader::readFile(const FastFile &fastFile,
 		uint64 filePos(0);
 		while (filePos < fileSize) {
 			if (curFastBundle->isFull()) {
-				curFastBundle->finalize();
+				curFastBundle->finalize(fastFile.getCompr());
 				IF_MESS_FASTREADER(sw->hold());
 				syncSwapQueue.swapPush(curFastBundle);
 				IF_MESS_FASTREADER(sw->proceed());
@@ -191,10 +257,16 @@ void gerbil::FastReader::readFile(const FastFile &fastFile,
 			//if(_totalBlocksRead % (1024 * 1024 * 256/ FAST_BLOCK_SIZE_B) == 0)
 			//	printf("\r%4.3f GB", (double)_totalBlocksRead / 1024 * FAST_BLOCK_SIZE_B / 1024 / 1024);
 		}
-		curFastBundle->finalize();
+		bool lastIsEmpty = curFastBundle->size == 0;
+		curFastBundle->finalize(fastFile.getCompr());
 		IF_MESS_FASTREADER(sw->hold());
 		syncSwapQueue.swapPush(curFastBundle);
 		IF_MESS_FASTREADER(sw->proceed());
+		if(!lastIsEmpty && fastFile.getCompr() != fc_none) {
+			curFastBundle->size = 0;
+			curFastBundle->finalize(fastFile.getCompr());
+			syncSwapQueue.swapPush(curFastBundle);
+		}
 
 		//printf("\r%4.3f GB\n", (double)fileSize / 1024 / 1024 / 1024);
 
@@ -206,7 +278,7 @@ void gerbil::FastReader::readFile(const FastFile &fastFile,
 		while (bzError != BZ_STREAM_END) {
 			curFastBundle->size = BZ2_bzRead(&bzError, bzip2File,
 					curFastBundle->data, FAST_BUNDLE_DATA_SIZE_B);
-			curFastBundle->finalize();
+			curFastBundle->finalize(fc_none);
 			fileSize += curFastBundle->size;
 			IF_MESS_FASTREADER(sw->hold());
 			syncSwapQueue.swapPush(curFastBundle);
@@ -218,11 +290,11 @@ void gerbil::FastReader::readFile(const FastFile &fastFile,
 		//printf("\r%4.3f GB\n", (double)fileSize / 1024 / 1024 / 1024);
 		BZ2_bzReadClose(&bzError, bzip2File);
 		fclose(file);
-	} else if (fastFile.getCompr() == fc_gzip) {
+	} /*else if (fastFile.getCompr() == fc_gzip) {
 		uint64 fileSize(0);
 		while ((curFastBundle->size = gzread(gzipFile, curFastBundle->data,
 		FAST_BUNDLE_DATA_SIZE_B))) {
-			curFastBundle->finalize();
+			curFastBundle->finalize(fc_none);
 			fileSize += curFastBundle->size;
 			IF_MESS_FASTREADER(sw->hold());
 			syncSwapQueue.swapPush(curFastBundle);
@@ -233,7 +305,7 @@ void gerbil::FastReader::readFile(const FastFile &fastFile,
 		}
 		//printf("\r%4.3f GB\n", (double)fileSize / 1024 / 1024 / 1024);
 		gzclose(gzipFile);
-	}
+	}*/
 
 	delete curFastBundle;
 }
@@ -247,7 +319,7 @@ void gerbil::FastReader::processThread(const size_t tId,
 	//read file(s)
 	uint64 curFastFileNr;
 	while ((curFastFileNr = _fastFileNr++) < _fastFilesNumber) {
-		readFile(*(_fastFiles[curFastFileNr]), syncSwapQueue
+		readFile(tId, *(_fastFiles[curFastFileNr]), syncSwapQueue
 #ifdef DEB_MESS_FASTREADER
 				, &sw
 #endif

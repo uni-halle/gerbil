@@ -59,12 +59,16 @@ typedef enum {
 } TFileType;
 
 typedef enum {
-	fc_none, fc_gzip, fc_bz2
+	fc_none, fc_gzip, fc_bz2, fc_DECOMPRESSOR
 } TFileCompr;
 
 typedef enum {
 	ht_free, ht_locked, ht_occupied
 } THashtableLockState;
+
+typedef enum {
+	of_none, of_gerbil, of_fasta
+} TOutputFormat;
 
 #define C_0  453569
 #define C_1  5696063

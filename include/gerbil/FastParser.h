@@ -25,75 +25,157 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "SyncQueue.h"
 #include "Bundle.h"
 
+#include <zlib.h>
+#include <bzlib.h>
+
 namespace gerbil {
 
-/*
- * extracts reads from each FastBundle and stores them in ReadBundles
- */
-class FastParser {
-private:
-  TSeqType _seqType;                          // sequence type
-  TFileType _fileType;                        // file type
+	class Decompressor {
 
-  uint64 _readsNumber;                        // number of reads
-  SyncSwapQueueMPMC<ReadBundle> _syncQueue;   // SyncSwapQueue for ReadBundles
+	private:
+		int ret;
+		z_stream strm;
+		FastBundle* _compressedFastBundle;
+		bool _resetable;
 
-  uint32_t _threadsNumber;                       // number of threads
-  std::thread** _processThreads;              // list of threads
+	public:
+		FastBundle fastBundle;
 
-  SyncSwapQueueSPSC<FastBundle>** _fastSyncSwapQueues;  // SyncSwapQueue for FastBundles
+		void reset() {
+			if(!_resetable) {
+				_resetable = true;
+				return;
+			}
+			//std::cout << "reset Decompressor" << std::endl;
+			/* allocate inflate state */
+			strm.zalloc = Z_NULL;
+			strm.zfree = Z_NULL;
+			strm.opaque = Z_NULL;
+			strm.avail_in = 0;
+			strm.next_in = Z_NULL;
+			//ret = inflateReset(&strm);
+			ret = inflateReset2(&strm, 16+MAX_WBITS);
+			if (ret != Z_OK) {
+				std::cerr << "decompress stream: unkown error" << std::endl;
+				exit(1);
+			}
+			fastBundle.clear();
+			fastBundle.compressType = fc_DECOMPRESSOR;
+		}
 
-  FastBundle** _curFastBundles;                         // current FastBundles
+		Decompressor() {
+			//std::cout << "init Decompressor" << std::endl;
+			/* allocate inflate state */
+			strm.zalloc = Z_NULL;
+			strm.zfree = Z_NULL;
+			strm.opaque = Z_NULL;
+			strm.avail_in = 0;
+			strm.next_in = Z_NULL;
+			//ret = inflateInit(&strm);
+			ret = inflateInit2(&strm, 16+MAX_WBITS);
+			if (ret != Z_OK) {
+				std::cerr << "decompress stream: unkown error" << std::endl;
+				exit(1);
+			}
+			_resetable = false;
+			fastBundle.compressType = fc_DECOMPRESSOR;
+		}
 
-  inline void skipLineBreak(char* &bp, char* &bp_end, const size_t &tId);
-  inline void skipLine(char* &bp, char* &bp_end, const size_t &tId);
-  inline void skipLine(char* &bp, char* &bp_end, const size_t &l, const size_t &tId);
-  inline void storeLine(
-    char* &bp, char* &bp_end, size_t &l,
-    ReadBundle* &readBundle, ReadBundle* &rbs, const size_t &tId, const char & skip
-  );
+		void setCompressedFastBundle(FastBundle* pCompressedFastBundle);
 
-  void nextPart(char* &bp, char* &bp_end, const size_t &tId);
 
-  void processFastq(const size_t &tId);
-  void processFasta(const size_t &tId);
-  void processMultiline(const size_t &tId);
+		FastBundle* getCompressedFastBundle() {
+			if(!_compressedFastBundle) {
+				std::cerr << "ERROR " << __FILE__ << " " << __LINE__ << std::endl;
+				return NULL;
+			}
+			else {
+				FastBundle* s = _compressedFastBundle;
+				_compressedFastBundle = NULL;
+				//std::cout << "getCompressedFastBundle" << std::endl;
+				return s;
+			}
 
-  StopWatch* _sw;
-public:
-  SyncSwapQueueMPMC<ReadBundle>* getSyncQueue();          // returns SyncSwapQueue of ReadBundles
+		}
 
-  inline uint64 getReadsNumber() { return _readsNumber; } // returns total number of reads
+		bool decompress(uint tId);
 
-  /*
-   * constructor
-   */
-  FastParser(
-      uint32 &readBundlesNumber, TFileType fileType, TSeqType seqType,
-      SyncSwapQueueSPSC<FastBundle>** _fastSyncSwapQueues,
-      const uint32_t &_readerParserThreadsNumber
-  );
 
-  /*
-   * starts the entire working process
-   */
-  void process();
+	};
 
-  /*
-   * joins all threads
-   */
-  void join();
+	/*
+	 * extracts reads from each FastBundle and stores them in ReadBundles
+	 */
+	class FastParser {
+	private:
+		TSeqType _seqType;                          // sequence type
+		TFileType _fileType;                        // file type
 
-  /*
-   * prints some statistical outputs
-   */
-  void print();
+		uint64 _readsNumber;                        // number of reads
+		SyncSwapQueueMPMC<ReadBundle> _syncQueue;   // SyncSwapQueue for ReadBundles
 
-  /*
-   * destructor
-   */
-  ~FastParser();
-};
+		uint32_t _threadsNumber;                       // number of threads
+		std::thread **_processThreads;              // list of threads
+
+		SyncSwapQueueSPSC<FastBundle> **_fastSyncSwapQueues;  // SyncSwapQueue for FastBundles
+
+		FastBundle **_curFastBundles;                         // current FastBundles
+		Decompressor **_decompressors;                         // decompressors for each thread
+
+		inline void skipLineBreak(char *&bp, char *&bp_end, const size_t &tId);
+
+		inline void skipLine(char *&bp, char *&bp_end, const size_t &tId);
+
+		inline void skipLine(char *&bp, char *&bp_end, const size_t &l, const size_t &tId);
+
+		inline void storeLine(
+				char *&bp, char *&bp_end, size_t &l,
+				ReadBundle *&readBundle, ReadBundle *&rbs, const size_t &tId, const char &skip
+		);
+
+		void nextPart(char *&bp, char *&bp_end, const size_t &tId);
+
+		void processFastq(const size_t &tId);
+
+		void processFasta(const size_t &tId);
+
+		void processMultiline(const size_t &tId);
+
+		StopWatch *_sw;
+	public:
+		SyncSwapQueueMPMC<ReadBundle> *getSyncQueue();          // returns SyncSwapQueue of ReadBundles
+
+		inline uint64 getReadsNumber() { return _readsNumber; } // returns total number of reads
+
+		/*
+		 * constructor
+		 */
+		FastParser(
+				uint32 &readBundlesNumber, TFileType fileType, TSeqType seqType,
+				SyncSwapQueueSPSC<FastBundle> **_fastSyncSwapQueues,
+				const uint32_t &_readerParserThreadsNumber
+		);
+
+		/*
+		 * starts the entire working process
+		 */
+		void process();
+
+		/*
+		 * joins all threads
+		 */
+		void join();
+
+		/*
+		 * prints some statistical outputs
+		 */
+		void print();
+
+		/*
+		 * destructor
+		 */
+		~FastParser();
+	};
 
 }
 

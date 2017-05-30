@@ -36,71 +36,74 @@ namespace gerbil {
  * reads files from disk and stored the data as byte blocks
  * decompresses the files if necessary
  */
-class FastReader {
-private:
-	uint64 _totalReadBytes;                            // total number of bytes which have been read
-	bfs::path _path;                                   // file path
-	TFileType _fileType;                               // file type
+	class FastReader {
 
-	FastFile** _fastFiles;                             // list of FastFiles
-	uint_fast32_t _fastFilesNumber;                    // number of FastFiles
+	private:
+		uint64 _totalReadBytes;                            // total number of bytes which have been read
+		bfs::path _path;                                   // file path
+		TFileType _fileType;                               // file type
 
-	SyncSwapQueueSPSC<FastBundle>** _syncSwapQueues;   // SyncSwapQueues for FastBundles
+		FastFile **_fastFiles;                             // list of FastFiles
+		uint_fast32_t _fastFilesNumber;                    // number of FastFiles
 
-	std::thread** _processThreads;                     // worker threads
+		SyncSwapQueueSPSC<FastBundle> **_syncSwapQueues;   // SyncSwapQueues for FastBundles
 
-	std::atomic<uint64> _totalBlocksRead;              // total number of blocks which have been read
+		std::thread **_processThreads;                     // worker threads
 
-	uint8 _threadsNumber;                              // number of threads
+		std::atomic<uint64> _totalBlocksRead;              // total number of blocks which have been read
 
-	std::atomic<uint64> _fastFileNr;                   // number of recently processed file
+		uint8 _threadsNumber;                              // number of threads
 
-  /*
-   * reads a single file and pushes the FastBundles in the SyncSwapQueue
-   */
-	void readFile(const FastFile &fastFile,
-			SyncSwapQueueSPSC<FastBundle> &syncSwapQueue
+		std::atomic<uint64> _fastFileNr;                   // number of recently processed file
+
+		/*
+		 * reads a single file and pushes the FastBundles in the SyncSwapQueue
+		 */
+		void readFile(
+				const uint tId,
+				const FastFile &fastFile,
+                SyncSwapQueueSPSC<FastBundle> &syncSwapQueue
 #ifdef DEB_MESS_FASTREADER
-			, StopWatch* sw
+				, StopWatch* sw
 #endif
-			);
+		);
 
-  /*
-   * starts the working process of a single thread
-   */
-	void processThread(const size_t tId,
-			SyncSwapQueueSPSC<FastBundle> &syncSwapQueue);
+		/*
+		 * starts the working process of a single thread
+		 */
+		void processThread(const size_t tId,
+		                   SyncSwapQueueSPSC<FastBundle> &syncSwapQueue);
 
-public:
-  /*
-   * constructor
-   */
-	FastReader(const uint32 &frBlocksNumber, std::string pPath,
-			uint8 &_readerParserThreadsNumber);
+	public:
+		/*
+		 * constructor
+		 */
+		FastReader(const uint32 &frBlocksNumber, std::string pPath,
+		           uint8 &_readerParserThreadsNumber);
 
-	SyncSwapQueueSPSC<FastBundle>** getSyncSwapQueues(); // returns the list of SyncSwapQueues
-	TFileType getFileType() const;                       // returns the file type
+		SyncSwapQueueSPSC<FastBundle> **getSyncSwapQueues(); // returns the list of SyncSwapQueues
+		TFileType getFileType() const;                       // returns the file type
 
-  /*
-   * starts the entire working process
-   */
-	void process();
+		/*
+		 * starts the entire working process
+		 */
+		void process();
 
-  /*
-   * prints some statistical outputs
-   */
-	void print();
+		/*
+		 * prints some statistical outputs
+		 */
+		void print();
 
-  /*
-   * joins all threads
-   */
-	void join();
+		/*
+		 * joins all threads
+		 */
+		void join();
 
-  /*
-   * destructor
-   */
-	~FastReader();
-};
+		/*
+		 * destructor
+		 */
+		~FastReader();
+	};
 
 }
 

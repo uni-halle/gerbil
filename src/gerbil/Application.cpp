@@ -29,7 +29,7 @@
 unsigned long long getTotalSystemMemory()  {
 #ifdef __linux__
 	struct sysinfo info;
-	if(!sysinfo(&info))
+	if(sysinfo(&info) == -1)
 		return DEF_MEMORY_SIZE;
 	return info.totalram;
 #elif _WIN32
@@ -77,7 +77,7 @@ gerbil::Application::Application() :
 		_fastFileName(""), _tempFolderName(""), _kmcFileName(""), _tempFiles(NULL),
 		_rtRun1(0.0), _rtRun2(0.0), _memoryUsage1(0), _memoryUsage2(0),
 		_readerParserThreadsNumber(1), _numGPUs(0),
-		_singleStep(0), _leaveBinStat(false), _histogram(0)
+		_singleStep(0), _leaveBinStat(false), _histogram(0), _outputFormat(of_gerbil)
 {
 
 }
@@ -127,6 +127,16 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 		case 'i':
 			_verbose = true;
 			break;
+		case 'o': {
+			std::string s(argv[++i]);
+			if (s == "fasta")
+				_outputFormat = of_fasta;
+			else if (s == "none")
+				_outputFormat = of_none;
+			else
+				_outputFormat = of_gerbil;
+			break;
+		}
 		case 'x':
 			switch(argv[++i][0]) {
 			case '1': _singleStep = 1; break;
@@ -177,6 +187,11 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 			printf("  -d                    disable normalization\n");
 			printf("  -i                    verbose output\n");
 			printf("  -s                    system check\n");
+			printf("  -o <outputFormat>     output format\n");
+			printf("      outputFormat:\n");
+			printf("         gerbil         gerbil format\n");
+			printf("         fasta          fasta format\n");
+			printf("         none           no output\n");
 #ifdef GPU
 			printf("  -g                    enable gpu\n");
 #endif
@@ -249,6 +264,8 @@ void gerbil::Application::run1() {
 	uint64 superWriterBufferSize;
 	distributeMemory1(frBlocksNumber, readBundlesNumber, superBundlesNumber,
 			superWriterBufferSize);
+
+
 
 	// init pipeline
 	FastReader fastReader(frBlocksNumber, _fastFileName,
@@ -324,7 +341,7 @@ void gerbil::Application::run2() {
 			_tempFiles, _tempFilesNumber, _thresholdMin, _norm, _tempFolderName,
 			maxKmcHashtableSize, kMerBundlesNumber,
 			superReader.getTempFilesOrder(), &distributor);
-	KmcWriter kmcWriter(_kmcFileName, kmerHasher.getKmcSyncSwapQueue(), _k);
+	KmcWriter kmcWriter(_kmcFileName, kmerHasher.getKmcSyncSwapQueue(), _k, _outputFormat);
 
 	// start pipeline
 	superReader.process();

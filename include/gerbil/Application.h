@@ -51,6 +51,7 @@ class Application {
 	uint8 _threadsNumber;					// total number of threads
 	uint8 _readerParserThreadsNumber;		// number of readers and parsers
 	uint8_t _numGPUs;						// number of gpu's to use
+	TOutputFormat  _outputFormat;           // which output format to use
 	bool _norm;								// normalization of kmers enabled
 	bool _verbose;							// show info/progress
 	uint _singleStep;						// processes only one step (default: 0 => all steps)

@@ -26,12 +26,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace gerbil {
 
+
 //#define USE_MEM_COPY
 
 	class FastBundle {
 	public:
 		char data[FAST_BUNDLE_DATA_SIZE_B + 1];
 		uint32 size;
+		TFileCompr compressType;
 
 		FastBundle() :
 				size(0) {
@@ -41,8 +43,9 @@ namespace gerbil {
 			return size + FAST_BLOCK_SIZE_B > FAST_BUNDLE_DATA_SIZE_B;
 		}
 
-		void inline finalize() {
+		void inline finalize(const TFileCompr& pFileCompr) {
 			data[size] = '\0';
+			compressType = pFileCompr;
 		}
 
 		void inline clear() {
