@@ -11,6 +11,18 @@ To cite Gerbil in publication, please use
 > Gerbil: A fast and memory-efficient k-mer counter with GPU-support,
 > Algorithms for Molecular Biology (2017) 12:9, open access.
 
+## Changelog
+
+### Version 1.1
+  * Improved performance while reading compressed input files
+  * Improved GPU performance
+  * Added option for creating `fasta` output
+  * Minor bugfixes
+
+### Version 1.0
+  * Initial upload
+  
+
 ## Install
 
 Gerbil is developed and tested at Linux operating systems. Migrating it to other OS like Windows is a current issue. It follows a description of the installation process at Ubuntu 16.04.
