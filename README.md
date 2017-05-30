@@ -53,13 +53,13 @@ Gerbil can be controlled by several command line options and flags.
 
 | Option               | Description   | Default |
 |:---------------------|:--------------| -------:|
-| `‑k int`   | Set the length of k-mers. Supported k currently range from 8 to 136. Support for values larger than 136 can easily be activated if needed. | 28 |
-| `‑m int`          | Set the length m of minimizers.      |   auto |
-| `‑e xMB`  | Restrict the maximal size of main memory Gerbil is allowed to use to x MB.      |    auto |
-| `‑e xGB`  | Restrict the maximal size of main memory Gerbil is allowed to use to x GB.      |    auto |
-| `‑f int`          | Set the number of temporary files.      |    512 |
-| `‑t int`          | Set the maximal number of parallel threads to use.      |    auto |
-| `‑l int`               | Set the minimal occurrence of a k-mer to be outputted.      |    3 |
+| `‑k <int>`   | Set the length of k-mers. Supported k currently range from 8 to 136. Support for values larger than 136 can easily be activated if needed. | 28 |
+| `‑m <int>`          | Set the length m of minimizers.      |   auto |
+| `‑e <int>MB`  | Restrict the maximal size of main memory Gerbil is allowed to use to x MB.      |    auto |
+| `‑e <int>GB`  | Restrict the maximal size of main memory Gerbil is allowed to use to x GB.      |    auto |
+| `‑o <opt>`    | Change the format of the output. Valid options for `<opt>` are `gerbil` and `fasta`.      |    `gerbil` |
+| `‑t <int>`          | Set the maximal number of parallel threads to use.      |    auto |
+| `‑l <int>`               | Set the minimal occurrence of a k-mer to be outputted.      |    3 |
 | `‑i`                   | Enable additional debug output.      |    |
 | `‑g`                   | Enable GPU mode. Gerbil will automatically detect CUDA-capable devices and will use them for counting in the second phase.      |     |
 | `‑v`                   | Show version number.      |     |
