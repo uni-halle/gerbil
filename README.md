@@ -57,7 +57,7 @@ Gerbil can be controlled by several command line options and flags.
 | `‑m <int>`          | Set the length m of minimizers.      |   auto |
 | `‑e <int>MB`  | Restrict the maximal size of main memory Gerbil is allowed to use to x MB.      |    auto |
 | `‑e <int>GB`  | Restrict the maximal size of main memory Gerbil is allowed to use to x GB.      |    auto |
-| `‑o <opt>`    | Change the format of the output. Valid options for `<opt>` are `gerbil` and `fasta`.      |    `gerbil` |
+| `‑o <opt>`    | Change the format of the output. Valid options for `<opt>` are `gerbil`, `fasta` and `none`.      |    `gerbil` |
 | `‑t <int>`          | Set the maximal number of parallel threads to use.      |    auto |
 | `‑l <int>`               | Set the minimal occurrence of a k-mer to be outputted.      |    3 |
 | `‑i`                   | Enable additional debug output.      |    |
