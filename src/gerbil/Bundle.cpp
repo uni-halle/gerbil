@@ -7,6 +7,8 @@
 
 #include "../../include/gerbil/Bundle.h"
 
+uint gerbil::ReadBundle::K = 0;
+
 gerbil::ReadBundle::ReadBundle(){
 	data = new byte[READ_BUNDLE_SIZE_B];
 	readsCount = (uint32*)(data + READ_BUNDLE_SIZE_B - 4);
@@ -66,6 +68,14 @@ bool gerbil::ReadBundle::transfer(ReadBundle* readbundle) {
 		return false;
 	--(*readsCount);
 	return true;
+}
+
+bool gerbil::ReadBundle::transferKm1(ReadBundle *readbundle) {
+	uint32 rc = *readsCount;
+	if (*(readOffsets - rc) - *(readOffsets - (rc - 1)) < K) {
+		return transfer(readbundle);
+	}
+	return readbundle->add(K - 1, (char*)data + *(readOffsets - rc) - K);
 }
 
 //IF_DEB_DEV(

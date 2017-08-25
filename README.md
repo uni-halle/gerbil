@@ -40,7 +40,7 @@ Gerbil is developed and tested at Linux operating systems. Migrating it to other
         cd gerbil
         mkdir build
         cd build
-        cmake -DCMAKE_BUILD_TYPE=Release ..
+        cmake ..
         make
 
 The `build` directory should now contain a binary `gerbil`.

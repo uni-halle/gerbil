@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 2.8)
 project(gerbil)
 
+# Set Default Build Type to Release
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+endif(NOT CMAKE_BUILD_TYPE)
+
 # Compile Flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
@@ -10,6 +15,7 @@ set(HEADER_FILES
         include/gerbil/Bundle.h
         include/gerbil/CpuHasher.h
         include/gerbil/config.h
+        include/gerbil/global.h
         include/gerbil/debug.h
         include/gerbil/FailureBuffer.h
         include/gerbil/FastFile.h
@@ -50,6 +56,7 @@ set(SOURCE_FILES_CPP
         src/gerbil/TempFile.cpp
         src/gerbil/debug.cpp
         src/gerbil/gerbil.cpp
+        src/gerbil/global.cpp
         )
 
 set(SOURCE_FILES_CUDA
@@ -83,6 +90,8 @@ if (CUDA_FOUND)
     set(MY_LIBS ${MY_LIBS} ${CUDA_LIBRARIES})
     cuda_compile(CUDA_OBJECTS ${SOURCE_FILES_CUDA})
 endif ()
+
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 # build executable
 add_executable(gerbil ${HEADER_FILES} ${SOURCE_FILES_CPP} ${CUDA_OBJECTS})

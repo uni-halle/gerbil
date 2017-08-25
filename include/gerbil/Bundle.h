@@ -57,6 +57,7 @@ namespace gerbil {
  * Bundle for single reads
  */
 	class ReadBundle {
+		static uint K;
 	public:
 		byte *data;                // data (header + reads)
 		uint32 *readsCount;        // number of reads
@@ -81,7 +82,13 @@ namespace gerbil {
 		// Cond.: readsCount > 0
 		bool transfer(ReadBundle *readBundle);
 
+		// transfers the last k-1 bases from the last of this bundle to readBundle
+		// Cond.: readsCount > 0
+		bool transferKm1(ReadBundle *readbundle);
+
 		void print();
+
+		static void setK(uint k) { K = k; }
 	};
 
 /*

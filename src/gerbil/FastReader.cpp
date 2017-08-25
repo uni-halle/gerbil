@@ -5,6 +5,8 @@
  *      Author: marius
  */
 
+#define OLD_ZIP_DECOMPR false
+
 #include "../../include/gerbil/FastReader.h"
 #include <errno.h>
 
@@ -161,11 +163,14 @@ void gerbil::FastReader::readFile(
 		) {
 	FastBundle* curFastBundle = new FastBundle;
 	bool inGB = fastFile.getSize() > ((uint64) 1 << 30);
-	printf("Thread[%i]: read file '%s' (%4lu %sB)...\n",
-	       tId,
-	       fastFile.getPath().leaf().c_str(),
-	       inGB ? B_TO_GB(fastFile.getSize()) : B_TO_MB(fastFile.getSize()),
-	       inGB ? "G" : "M");
+
+	if(verbose) {
+		printf("Thread[%i]: read file '%s' (%4lu %sB)...\n",
+		       tId,
+		       fastFile.getPath().leaf().c_str(),
+		       inGB ? B_TO_GB(fastFile.getSize()) : B_TO_MB(fastFile.getSize()),
+		       inGB ? "G" : "M");
+	}
 	//if (fastFile.getSize() > ((uint64) 1 << 30))
 	//	printf("read file '%s' (%4lu GB)...\n",
 	//			fastFile.getPath().leaf().c_str(), B_TO_GB(fastFile.getSize()));
@@ -178,7 +183,9 @@ void gerbil::FastReader::readFile(
 	gzFile_s* gzipFile;
 	BZFILE* bzip2File;
 	switch (fastFile.getCompr()) {
+#if not OLD_ZIP_DECOMPR
 	case fc_gzip:
+#endif
 	case fc_none:
 		file = fopen(fastFile.getPath().c_str(), "rb");
 		if (!file) {
@@ -188,7 +195,7 @@ void gerbil::FastReader::readFile(
 		}
 		setbuf(file, NULL);
 		break;
-	/*
+#if OLD_ZIP_DECOMPR
 		case fc_gzip:
 		gzipFile = gzopen(fastFile.getPath().c_str(), "rb");
 		if (!gzipFile) {
@@ -198,7 +205,7 @@ void gerbil::FastReader::readFile(
 		}
 		gzbuffer(gzipFile, 1024 * 1024);
 		break;
-*/
+#endif
 	case fc_bz2:
 		file = fopen(fastFile.getPath().c_str(), "rb");
 		if (!file) {
@@ -223,7 +230,9 @@ void gerbil::FastReader::readFile(
 	char* curData = curFastBundle->data;
 
 	if (fastFile.getCompr() == fc_none
+#if not OLD_ZIP_DECOMPR
 	    || fastFile.getCompr() == fc_gzip
+#endif
 			) {
 
 		// determine file size
@@ -234,10 +243,12 @@ void gerbil::FastReader::readFile(
 		_totalReadBytes += fileSize;
 		// block wise reading
 		uint64 filePos(0);
+		uint fastBundleCounter = 0;
 		while (filePos < fileSize) {
 			if (curFastBundle->isFull()) {
 				curFastBundle->finalize(fastFile.getCompr());
 				IF_MESS_FASTREADER(sw->hold());
+				++fastBundleCounter;
 				syncSwapQueue.swapPush(curFastBundle);
 				IF_MESS_FASTREADER(sw->proceed());
 				curData = curFastBundle->data;
@@ -266,7 +277,9 @@ void gerbil::FastReader::readFile(
 			curFastBundle->size = 0;
 			curFastBundle->finalize(fastFile.getCompr());
 			syncSwapQueue.swapPush(curFastBundle);
+			++fastBundleCounter;
 		}
+		//std::cout << "fastBundleCounter = " << fastBundleCounter << std::endl;
 
 		//printf("\r%4.3f GB\n", (double)fileSize / 1024 / 1024 / 1024);
 
@@ -290,10 +303,14 @@ void gerbil::FastReader::readFile(
 		//printf("\r%4.3f GB\n", (double)fileSize / 1024 / 1024 / 1024);
 		BZ2_bzReadClose(&bzError, bzip2File);
 		fclose(file);
-	} /*else if (fastFile.getCompr() == fc_gzip) {
+	}
+#if OLD_ZIP_DECOMPR
+	else if (fastFile.getCompr() == fc_gzip) {
 		uint64 fileSize(0);
+		//FILE* file = fopen("/home/rechner/Desktop/out.fa", "wb");
 		while ((curFastBundle->size = gzread(gzipFile, curFastBundle->data,
 		FAST_BUNDLE_DATA_SIZE_B))) {
+			//fwrite(curFastBundle->data, 1, curFastBundle->size, file);
 			curFastBundle->finalize(fc_none);
 			fileSize += curFastBundle->size;
 			IF_MESS_FASTREADER(sw->hold());
@@ -305,7 +322,9 @@ void gerbil::FastReader::readFile(
 		}
 		//printf("\r%4.3f GB\n", (double)fileSize / 1024 / 1024 / 1024);
 		gzclose(gzipFile);
-	}*/
+		//fclose(file);
+	}
+#endif
 
 	delete curFastBundle;
 }

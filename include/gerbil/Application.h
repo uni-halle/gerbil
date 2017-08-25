@@ -22,6 +22,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef APPLICATION_H_
 #define APPLICATION_H_
 
+#include "global.h"
 #include "FastReader.h"
 #include "FastParser.h"
 #include "SequenceSplitter.h"
@@ -53,7 +54,6 @@ class Application {
 	uint8_t _numGPUs;						// number of gpu's to use
 	TOutputFormat  _outputFormat;           // which output format to use
 	bool _norm;								// normalization of kmers enabled
-	bool _verbose;							// show info/progress
 	uint _singleStep;						// processes only one step (default: 0 => all steps)
 	bool _leaveBinStat;						// leaves binStatFile
 	bool _histogram;						// prints histogram

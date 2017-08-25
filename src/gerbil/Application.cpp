@@ -50,7 +50,7 @@ unsigned long long getTotalSystemMemory()  {
 unsigned long long getFreeSystemMemory()  {
 #ifdef __linux__
 	struct sysinfo info;
-	if(!sysinfo(&info))
+	if(sysinfo(&info) == -1)
 		return DEF_MEMORY_SIZE;
 	return info.freeram;
 #elif _WIN32
@@ -73,7 +73,7 @@ unsigned long long getFreeSystemMemory()  {
 gerbil::Application::Application() :
 		_k(0), _m(0), _tempFilesNumber(0), _sequenceSplitterThreadsNumber(0),
 		_superSplitterThreadsNumber(0), _hasherThreadsNumber(0), _thresholdMin(0), _memSize(0),
-		_threadsNumber(0), _norm(DEF_NORM), _verbose(DEF_VERBOSE),
+		_threadsNumber(0), _norm(DEF_NORM),
 		_fastFileName(""), _tempFolderName(""), _kmcFileName(""), _tempFiles(NULL),
 		_rtRun1(0.0), _rtRun2(0.0), _memoryUsage1(0), _memoryUsage2(0),
 		_readerParserThreadsNumber(1), _numGPUs(0),
@@ -125,7 +125,7 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 			_norm = false;
 			break;
 		case 'i':
-			_verbose = true;
+			verbose = true;
 			break;
 		case 'o': {
 			std::string s(argv[++i]);
@@ -230,7 +230,7 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 				else { std::cerr << "missing parameters (-h for help)\n"; exit(1); })
 
 	autocompleteParams();
-	if (_verbose)
+	if (verbose)
 		printParamsInfo();
 	checkParams();
 }
@@ -238,6 +238,8 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 void gerbil::Application::process(const int &argc, char** argv) {
 
 	parseParams(argc, argv);
+
+	ReadBundle::setK(_k);
 
 	if (_singleStep != 2)
 		run1();
@@ -299,7 +301,7 @@ void gerbil::Application::run1() {
 	_rtRun1 = sw.get_s();
 
 	// verbose output
-	if (_verbose) {
+	if (verbose) {
 		printf("================== STAGE 1 ==================\n");
 		fastReader.print();
 		fastParser.print();
@@ -363,7 +365,7 @@ void gerbil::Application::run2() {
 		kmerHasher.saveHistogram();
 
 	// verbose output
-	if (_verbose) {
+	if (verbose) {
 		printf("================== STAGE 2 ==================\n");
 		kmerHasher.print();
 		kmcWriter.print();

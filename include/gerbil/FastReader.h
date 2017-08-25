@@ -22,6 +22,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef FASTREADER_H_
 #define FASTREADER_H_
 
+#include "global.h"
 #include "SyncQueue.h"
 #include "Bundle.h"
 #include "FastFile.h"

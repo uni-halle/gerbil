@@ -24,6 +24,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "SyncQueue.h"
 #include "Bundle.h"
+#include "global.h"
 
 #include <zlib.h>
 #include <bzlib.h>
@@ -129,6 +130,11 @@ namespace gerbil {
 		inline void skipLine(char *&bp, char *&bp_end, const size_t &l, const size_t &tId);
 
 		inline void storeLine(
+				char *&bp, char *&bp_end, size_t &l,
+				ReadBundle *&readBundle, ReadBundle *&rbs, const size_t &tId, const char &skip
+		);
+
+		inline void storeSequence(
 				char *&bp, char *&bp_end, size_t &l,
 				ReadBundle *&readBundle, ReadBundle *&rbs, const size_t &tId, const char &skip
 		);

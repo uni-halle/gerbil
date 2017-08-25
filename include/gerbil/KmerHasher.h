@@ -305,6 +305,8 @@ namespace gerbil {
 
 				// not clear what is going on here?
 				curTempFileId = _tempFilesOrder[rdyNmbs];
+				if(_tempFiles[curTempFileId].isEmpty())
+					continue;
 				if (curTempRun + 1 < _tempFiles[curTempFileId].getNumberOfRuns()) {
 					--rdyNmbs;
 				}
