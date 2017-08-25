@@ -13,6 +13,9 @@ To cite Gerbil in publication, please use
 
 ## Changelog
 
+### Version 1.11
+  * Minor Bugfixes and enhanced tolerance when reading malformed fasta files
+
 ### Version 1.1
   * Improved performance while reading compressed input files
   * Improved GPU performance
