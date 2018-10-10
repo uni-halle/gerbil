@@ -7,7 +7,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 # Compile Flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fpermissive -w")
 
 # Include Files
 set(HEADER_FILES
@@ -68,6 +68,7 @@ set(SOURCE_FILES_CUDA
 find_package(Boost REQUIRED COMPONENTS system thread filesystem regex)
 find_package(BZip2 REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(Threads)
 find_package(CUDA)
 
 # set include directory (-I)
@@ -81,7 +82,8 @@ include_directories(
 set(MY_LIBS
         ${Boost_LIBRARIES}
         ${BZIP2_LIBRARIES}
-        ${ZLIB_LIBRARIES})
+        ${ZLIB_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT})
 
 # if CUDA is located at the system
 if (CUDA_FOUND)
