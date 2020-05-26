@@ -79,8 +79,40 @@ void gerbil::KmcWriter::process() {
 				IF_MESS_KMCWRITER(sw.hold();)
 			}
 			_fileSize = ftell(_file);
-		}
-		else if(_outputFormat == of_gerbil) {
+		} else if(_outputFormat == of_gerbil32) {
+			const size_t kMerSize_B = (_k + 3) / 4;
+
+			IF_MESS_KMCWRITER(sw.hold();)
+			while(_kmcSyncSwapQueue->swapPop(kb)) {
+				IF_MESS_KMCWRITER(sw.proceed();)
+				if(!kb->isEmpty()) {
+					const byte* p = kb->getData();
+					const byte* end = p + kb->getSize();
+					while(p < end) {
+						uint32 counter = (uint32)*(p++);
+						if(counter >= 255) {
+							// large value
+							counter = *((uint32*)p);
+							p += 4;
+						}
+						
+						// 32 bit counter value
+						fwrite ((char*) &counter , 1 , 4 , _file );
+						
+						// encoded k-mer
+						fwrite ((char*) p , 1 , kMerSize_B , _file );
+
+						// increase pointer
+						p += kMerSize_B;
+						
+						// increase file size
+						_fileSize += kMerSize_B + 4;
+					}
+				}
+				kb->clear();
+				IF_MESS_KMCWRITER(sw.hold();)
+			}
+		} else if(_outputFormat == of_gerbil) {
 			IF_MESS_KMCWRITER(sw.hold();)
 			while(_kmcSyncSwapQueue->swapPop(kb)) {
 				_fileSize += kb->getSize();
