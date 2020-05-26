@@ -67,7 +67,7 @@ typedef enum {
 } THashtableLockState;
 
 typedef enum {
-	of_none, of_gerbil, of_fasta
+	of_none, of_gerbil, of_fasta, of_gerbil32
 } TOutputFormat;
 
 #define C_0  453569
