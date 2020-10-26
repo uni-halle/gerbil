@@ -178,7 +178,7 @@ __global__ void compressKernel(KeyValuePair<intsPerKey>* table,
 
 	while (l < r) {
 
-		printf("l=%u, r=%u\n", l, r);
+	//	printf("l=%u, r=%u\n", l, r);
 
 		// swap table[l] with table[r])
 		my_swap<intsPerKey, blocksize>(table, numEntries, l, r, shared);
@@ -188,7 +188,7 @@ __global__ void compressKernel(KeyValuePair<intsPerKey>* table,
 		r = lastOccupiedPosition<intsPerKey, blocksize>(table, numEntries, l, r-1, shared);
 	}
 
-	printf("l=%u, r=%u\n", l, r);
+//	printf("l=%u, r=%u\n", l, r);
 
 	*res = l;
 }
