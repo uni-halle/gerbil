@@ -133,6 +133,8 @@ void gerbil::Application::parseParams(const int &argc, char** argv) {
 				_outputFormat = of_fasta;
 			else if (s == "none")
 				_outputFormat = of_none;
+			else if (s == "32bit")
+				_outputFormat = of_gerbil32;
 			else
 				_outputFormat = of_gerbil;
 			break;
